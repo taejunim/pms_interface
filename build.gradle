@@ -11,10 +11,6 @@ sourceCompatibility = '1.8'
 
 repositories {
     mavenCentral()
-
-    maven {
-        url "https://maven.egovframe.kr/maven/" //전자정부 maven 저장소
-    }
 }
 
 dependencies {
@@ -30,19 +26,6 @@ dependencies {
 
     implementation 'javax.servlet:jstl'
     implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'
-}
-
-/* 전자정부 프레임워크 의존성 추가 */
-dependencies {
-    implementation(group: 'egovframework.rte', name: 'egovframework.rte.ptl.mvc', version:'3.5.0') {
-        exclude(module: 'commons-logging')
-    }
-    implementation group: 'egovframework.rte', name: 'egovframework.rte.psl.dataaccess', version:'3.5.0'
-    implementation group: 'egovframework.rte', name: 'egovframework.rte.fdl.idgnr', version:'3.5.0'
-    implementation group: 'egovframework.rte', name: 'egovframework.rte.fdl.property', version:'3.5.0'
-    implementation group: 'taglibs', name: 'standard', version:'1.1.2'
-    implementation group: 'org.antlr', name: 'antlr', version:'3.5'
-    implementation group: 'javax.servlet', name: 'servlet-api', version:'2.5'
 }
 
 tasks.named('test') {
