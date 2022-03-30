@@ -8,9 +8,22 @@ import io.swagger.v3.oas.models.info.License;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * SwaggerConfig.java
+ *
+ * Swagger 설정
+ *
+ * Created by Ki-Jeong Kang on 2022/03/29.
+ */
+
 @Configuration
 public class SwaggerConfig {
 
+    /**
+     * PMS OpenAPI 설정
+     *
+     * @return OpenAPI 정보
+     */
     @Bean
     public OpenAPI pmsOpenApi() {
         return new OpenAPI()
@@ -22,12 +35,11 @@ public class SwaggerConfig {
                         .license(new License()
                                 .name("Apache 2.0")
                                 .url("https://springdoc.org")
-                        )
+                        )   //라이센스 정보
                 )
                 .externalDocs(new ExternalDocumentation()
                         .description("PMS API Documentation")
                         .url("https://springshop.wiki.github.org/docs")
                 );
-
     }
 }

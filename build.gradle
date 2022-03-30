@@ -18,6 +18,8 @@ dependencies {
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
+    implementation 'org.projectlombok:lombok:1.18.20'
+
     implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.6'   //Springdoc - OpenAPI UI 3.0
     implementation group: 'org.springdoc', name: 'springdoc-openapi-data-rest', version: '1.6.6'    //Springdoc - Data Rest
 
