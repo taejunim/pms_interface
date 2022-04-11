@@ -1,8 +1,6 @@
 package pms.pmsapi.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Repository;
 import pms.pmsapi.model.base.ESS;
 
