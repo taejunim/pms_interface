@@ -1,8 +1,8 @@
-package pms.pmsapi.mapper;
+package pms.api.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
-import pms.pmsapi.model.base.ESS;
+import pms.api.model.base.ESS;
 
 import java.util.List;
 

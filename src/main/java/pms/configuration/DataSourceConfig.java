@@ -1,4 +1,4 @@
-package pms.pmsapi.configuration;
+package pms.configuration;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;

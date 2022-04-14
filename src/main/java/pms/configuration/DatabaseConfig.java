@@ -1,4 +1,4 @@
-package pms.pmsapi.configuration;
+package pms.configuration;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
@@ -31,7 +31,7 @@ public class DatabaseConfig {
         sqlSessionFactoryBean.setDataSource(dataSource);
         sqlSessionFactoryBean.setConfigLocation(applicationContext.getResource("classpath:mybatis-config.xml"));
         sqlSessionFactoryBean.setMapperLocations(applicationContext.getResources("classpath*:/mapper/*.xml"));
-        sqlSessionFactoryBean.setTypeAliasesPackage("pms.pmsapi");
+        sqlSessionFactoryBean.setTypeAliasesPackage("pms");
 
         return sqlSessionFactoryBean.getObject();
     }

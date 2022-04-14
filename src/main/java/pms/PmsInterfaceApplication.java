@@ -1,12 +1,12 @@
-package pms.pmsapi;
+package pms;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class PmsApiApplication {
+public class PmsInterfaceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(PmsApiApplication.class, args);
+        SpringApplication.run(PmsInterfaceApplication.class, args);
     }
 }

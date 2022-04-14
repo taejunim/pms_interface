@@ -1,9 +1,9 @@
-package pms.pmsapi.base.service;
+package pms.api.base.service;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import pms.pmsapi.mapper.BaseMapper;
-import pms.pmsapi.model.base.ESS;
+import pms.api.mapper.BaseMapper;
+import pms.api.model.base.ESS;
 
 import java.util.List;
 
