@@ -1,8 +1,8 @@
-package pms.api.mapper;
+package pms.api.weatherInterface.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
-import pms.api.model.weatherInterface.WeatherInterface;
+import pms.api.weatherInterface.model.WeatherInterface;
 
 /**
  * WeatherInterfaceMapper.java

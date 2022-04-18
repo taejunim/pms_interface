@@ -1,8 +1,8 @@
-package pms.api.weatherInterface;
+package pms.api.weatherInterface.service;
 
 import org.springframework.stereotype.Service;
-import pms.api.mapper.WeatherInterfaceMapper;
-import pms.api.model.weatherInterface.WeatherInterface;
+import pms.api.weatherInterface.mapper.WeatherInterfaceMapper;
+import pms.api.weatherInterface.model.WeatherInterface;
 
 /**
  * WeatherInterfaceService.java

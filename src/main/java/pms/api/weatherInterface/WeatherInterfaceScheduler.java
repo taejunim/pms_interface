@@ -3,11 +3,13 @@ package pms.api.weatherInterface;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-import pms.api.model.weatherInterface.WeatherInterface;
+import pms.api.weatherInterface.model.WeatherInterface;
+import pms.api.weatherInterface.service.WeatherInterfaceService;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -20,7 +22,7 @@ import java.util.Date;
 @Component
 public class WeatherInterfaceScheduler {
 
-    private final WeatherInterfaceService WeatherInterfaceService;
+    private final pms.api.weatherInterface.service.WeatherInterfaceService WeatherInterfaceService;
 
     public WeatherInterfaceScheduler(WeatherInterfaceService weatherInterfaceService) {
         this.WeatherInterfaceService = weatherInterfaceService;
@@ -64,87 +66,111 @@ public class WeatherInterfaceScheduler {
 
         /* 초단기 예보 데이터 START */
         URI weatherResponseURI = new URI(makeFullURI(weatherForecastApiUrl));
+        System.out.println("초단계 예보 데이터 URI --> " + weatherResponseURI);
         ResponseEntity<String> weatherApiResponse = restTemplate.exchange(weatherResponseURI, HttpMethod.GET, entity, String.class);
-        JsonObject weatherResult = getApiResultBody(weatherApiResponse);
 
-        if(weatherResult.size() > 0){
-            JsonObject items = weatherResult.getAsJsonObject("items");
-            JsonArray item = items.getAsJsonArray("item");
-
+        try {
             // 포맷 정의
+            SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
             SimpleDateFormat timeFormat = new SimpleDateFormat("HH");
             Date date = new Date();
+
+            //서버 에러 발생시, 측정일과 측정시간은 담아주기 위함.
+            String fcstDate = format.format(date);
             String fcstTime = timeFormat.format(date) + "00";
-            for(int i = 0 ; i < item.size() ; i ++){
-               JsonObject indexItem = (JsonObject) item.get(i);
+            weatherInterface.setNx(Integer.parseInt(nx));
+            weatherInterface.setNy(Integer.parseInt(ny));
+            weatherInterface.setBaseDate(fcstDate);
+            weatherInterface.setBaseTime(fcstTime);
 
-                if(i == 0) {
-                    weatherInterface.setNx(indexItem.get("nx").getAsInt());
-                    weatherInterface.setNy(indexItem.get("ny").getAsInt());
-                    weatherInterface.setBaseDate(indexItem.get("fcstDate").toString().replace("\"",""));
-                    weatherInterface.setBaseTime(fcstTime);
+            JsonObject weatherResult = getApiResultBody(weatherApiResponse);
+            System.out.println("초단계 예보 데이터 body");
+            System.out.println(weatherResult);
+            if (weatherResult.size() > 0) {
+                JsonObject items = weatherResult.getAsJsonObject("items");
+                JsonArray item = items.getAsJsonArray("item");
+
+                for (int i = 0; i < item.size(); i++) {
+                    JsonObject indexItem = (JsonObject) item.get(i);
+                    /*
+                     * - 자료구분 코드 정보
+                     *    T1H - 기온 (단위: ℃)
+                     *    SKY - 하늘상태 (맑음, 구름많음, 흐림)
+                     *    REH - 습도 (단위: %)
+                     *    PCP - 1시간 강수량
+                     *    WSD - 풍속 (단위: m/s)
+                     */
+                    if (indexItem.get("fcstTime").toString().contains(fcstTime)) {
+                        String category = indexItem.get("category").toString().replace("\"", "");
+
+                        switch (category) {
+                            case "T1H":
+                                weatherInterface.setTemp(indexItem.get("fcstValue").getAsInt());
+                                break;
+                            case "SKY":
+                                weatherInterface.setSky(Integer.parseInt(indexItem.get("fcstValue").toString().replace("\"", "")));
+                                break;
+                            case "REH":
+                                weatherInterface.setReh(indexItem.get("fcstValue").getAsString());
+                                break;
+                            case "PCP":
+                                weatherInterface.setRn1(Integer.parseInt(indexItem.get("fcstValue").toString().replace("\"", "")));
+                                break;
+                            case "WSD":
+                                weatherInterface.setWsd(indexItem.get("fcstValue").toString().replace("\"", ""));
+                                break;
+                            default:
+                                break;
+                        }
+                    }
                 }
-
-                /*
-                 * - 자료구분 코드 정보
-                 *    T1H - 기온 (단위: ℃)
-                 *    SKY - 하늘상태 (맑음, 구름많음, 흐림)
-                 *    REH - 습도 (단위: %)
-                 *    PCP - 1시간 강수량
-                 *    WSD - 풍속 (단위: m/s)
-                 */
-                if(indexItem.get("fcstTime").toString().contains(fcstTime)){
-                   String category = indexItem.get("category").toString().replace("\"","");
-
-                   switch (category){
-                       case "T1H" :
-                           weatherInterface.setTemp(indexItem.get("fcstValue").getAsInt());
-                           break;
-                       case "SKY" :
-                           weatherInterface.setSky(Integer.parseInt(indexItem.get("fcstValue").toString().replace("\"","")));
-                           break;
-                       case "REH" :
-                           weatherInterface.setReh(indexItem.get("fcstValue").getAsString());
-                           break;
-                       case "PCP" :
-                           weatherInterface.setRn1(Integer.parseInt(indexItem.get("fcstValue").toString().replace("\"","")));
-                           break;
-                       case "WSD" :
-                           weatherInterface.setWsd(indexItem.get("fcstValue").toString().replace("\"",""));
-                           break;
-                       default    :
-                           break;
-                   }
-               }
             }
+        } catch (JsonSyntaxException e){
+            System.out.println("weatherApiResponse - 초단기 예보 데이터 응답 이상");
+            System.out.println(weatherApiResponse);
         }
         /* 초단기 예보 데이터 END */
         /* 일출,일몰 데이터 START */
         URI sunsetSunriseResponseURI = new URI(makeFullURI(sunriseSunsetApiUrl));
+        System.out.println("일몰 일출 데이터 URI --> " + sunsetSunriseResponseURI);
         ResponseEntity<String> sunriseSunsetApiResponse = restTemplate.exchange(sunsetSunriseResponseURI, HttpMethod.GET, entity, String.class);
-        JsonObject sunriseSunsetResult = getApiResultBody(sunriseSunsetApiResponse);
-        if(sunriseSunsetResult.size() > 0){
-            JsonObject items = (JsonObject) sunriseSunsetResult.get("items");
-            if(items.size() > 0) {
-                JsonObject item = items.getAsJsonObject("item");
-                String sunrise = item.get("sunrise").toString();
-                String sunset = item.get("sunset").toString();
-                weatherInterface.setSunrise(sunrise.substring(1,3) + ":" + sunrise.substring(3,5));
-                weatherInterface.setSunset(sunset.substring(1,3) + ":" + sunset.substring(3,5));
+        try {
+            JsonObject sunriseSunsetResult = getApiResultBody(sunriseSunsetApiResponse);
+            System.out.println("일몰일출 데이터 body");
+            System.out.println(sunriseSunsetResult);
+            if (sunriseSunsetResult.size() > 0) {
+                JsonObject items = (JsonObject) sunriseSunsetResult.get("items");
+                if (items.size() > 0) {
+                    JsonObject item = items.getAsJsonObject("item");
+                    String sunrise = item.get("sunrise").toString();
+                    String sunset = item.get("sunset").toString();
+                    weatherInterface.setSunrise(sunrise.substring(1, 3) + ":" + sunrise.substring(3, 5));
+                    weatherInterface.setSunset(sunset.substring(1, 3) + ":" + sunset.substring(3, 5));
+                }
             }
+        } catch (JsonSyntaxException e){
+            System.out.println("sunriseSunsetApiResponse - 일몰 일출 데이터 응답 이상");
+            System.out.println(sunriseSunsetApiResponse);
         }
         /* 일출,일몰 데이터 END */
         /* 미세 먼지 데이터 START */
         URI fineDustResponseURI = new URI(makeFullURI(fineDustApiUrl));
+        System.out.println("미세먼지 데이터 URI --> " + fineDustResponseURI);
         ResponseEntity<String> fineDustApiResponse = restTemplate.exchange(fineDustResponseURI, HttpMethod.GET, entity, String.class);
-        JsonObject fineDustResult = getApiResultBody(fineDustApiResponse);
-
-        if(fineDustResult.size() > 0){
-            JsonArray items = (JsonArray) fineDustResult.get("items");
-            if(items.size() > 0) {
-                JsonObject item = (JsonObject) items.get(0);
-                weatherInterface.setPm10(item.get("pm10Flag").isJsonNull() ? item.get("pm10Value").toString().replace("\"","") : "");
+        try {
+            JsonObject fineDustResult = getApiResultBody(fineDustApiResponse);
+            System.out.println("미세먼지 데이터 body");
+            System.out.println(fineDustResult);
+            if (fineDustResult.size() > 0) {
+                JsonArray items = (JsonArray) fineDustResult.get("items");
+                if (items.size() > 0) {
+                    JsonObject item = (JsonObject) items.get(0);
+                    weatherInterface.setPm10(item.get("pm10Flag").isJsonNull() ? item.get("pm10Value").toString().replace("\"", "") : "");
+                }
             }
+        } catch (JsonSyntaxException e){
+            System.out.println("fineDustApiResponse - 미세 먼지 데이터 응답 이상");
+            System.out.println(fineDustApiResponse);
         }
         /* 미세 먼지 데이터 END */
         WeatherInterfaceService.insertWeatherData(weatherInterface);

@@ -1,4 +1,4 @@
-package pms.api.model.weatherInterface;
+package pms.api.weatherInterface.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
