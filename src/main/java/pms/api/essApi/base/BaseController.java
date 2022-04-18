@@ -1,4 +1,4 @@
-package pms.api.base;
+package pms.api.essApi.base;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -9,8 +9,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pms.api.base.service.BaseService;
-import pms.api.model.base.ESS;
+import pms.api.essApi.base.service.BaseService;
+import pms.api.essApi.model.base.ESS;
 
 import java.util.List;
 

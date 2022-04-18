@@ -1,4 +1,4 @@
-package pms.api.model.base;
+package pms.api.essApi.model.base;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
