@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
-@PropertySource(value = "interface.properties", encoding = "UTF-8")
+@PropertySource(value = "classpath:/interface.properties", encoding = "UTF-8")
 public class PmsInterfaceApplication {
 
     public static void main(String[] args) {
