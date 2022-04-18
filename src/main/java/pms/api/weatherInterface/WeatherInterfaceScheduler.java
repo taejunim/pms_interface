@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,14 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+/**
+ * WeatherInterfaceScheduler.java
+ *
+ * 날씨 정보 Scheduler
+ *
+ * Created by Youyeong Jo on 2022/04/15.
+ */
+
 @Component
 public class WeatherInterfaceScheduler {
 
@@ -28,34 +37,60 @@ public class WeatherInterfaceScheduler {
         this.WeatherInterfaceService = weatherInterfaceService;
     }
 
-    //초단기 예보 API URL
-    public String weatherForecastApiUrl = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst";
-    //일몰 일출 API URL
-    public String sunriseSunsetApiUrl = "http://apis.data.go.kr/B090041/openapi/service/RiseSetInfoService/getAreaRiseSetInfo";
-    //미세먼지 API URL
-    public String fineDustApiUrl = "http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty";
     //data.go.kr 인증키
-    public String serviceKey = "aDVsltIrJTOtDLpTA6qnVPhVhaT%2FaciIUGI30aiipGikIAAZOI4KxfVFBqW9q3s%2B3xgVzKx6c3gJdUVGaNJ9Bg%3D%3D";
-    //공공데이터포탈 응답 형식
-    public String dataType ="JSON";
+    @Value("${weather.api.serviceKey}")
+    private String serviceKey;
+    //공공데이터포털 응답 형식
+    @Value("${weather.api.dataType}")
+    private String dataType;
     //페이지 번호
-    public String pageNo = "1";
-    //페이지 결과 수 - 날씨
-    public String weatherNumOfRows = "60";
-    //페이지 결과 수 - 미세먼지
-    public String fineDustNumOfRows = "1";
+    @Value("${weather.api.pageNo}")
+    private String pageNo;
+    //인코딩 타입
+    @Value("${weather.api.encoding}")
+    private String encoding;
 
+    //초단기 예보 API URL
+    @Value("${weather.api.forecast.url}")
+    private String weatherForecastApiUrl;
+    //페이지 결과 수 - 날씨
+    @Value("${weather.api.forecast.numOfRows}")
+    private String weatherNumOfRows;
     //초단기 예보 지역 코드 - 제주
-    public String nx = "53";
-    //초단기 예보 지역 코드 - 제주
-    public String ny = "38";
+    @Value("${weather.api.forecast.nx}")
+    private String nx;
+    @Value("${weather.api.forecast.ny}")
+    private String ny;
+
+    //일몰 일출 API URL
+    @Value("${weather.api.sun.url}")
+    private String sunriseSunsetApiUrl;
     //일몰 일출 API 지역
-    public String sunsetSunriseApiLocation = "제주";
+    @Value("${weather.api.sun.location}")
+    private String sunsetSunriseApiLocation;
+
+    //미세먼지 API URL
+    @Value("${weather.api.dust.url}")
+    private String fineDustApiUrl;
+    //페이지 결과 수 - 미세먼지
+    @Value("${weather.api.dust.numOfRows}")
+    private String fineDustNumOfRows;
     //미세 먼지 API 측정소
-    public String fineDustStationName = "이도동";
+    @Value("${weather.api.dust.station}")
+    private String fineDustStationName;
+    //미세 먼지 API 측정 주기
+    @Value("${weather.api.dust.dataTerm}")
+    private String fineDustDataTerm;
+    //미세 먼지 API 버전
+    @Value("${weather.api.dust.version}")
+    private String fineDustVersion;
 
     public Gson gson = new Gson();
 
+    /**
+     * getWeatherData()
+     * 매 시간 10분에 날씨 관련 API 호출 하여 응답값 DB에 저장
+     **/
     @Scheduled(cron="0 10 0/1 * * *" )
     public void getWeatherData() throws URISyntaxException, UnsupportedEncodingException {
 
@@ -125,7 +160,7 @@ public class WeatherInterfaceScheduler {
                     }
                 }
             }
-        } catch (JsonSyntaxException e){
+        } catch (JsonSyntaxException | ClassCastException e){
             System.out.println("weatherApiResponse - 초단기 예보 데이터 응답 이상");
             System.out.println(weatherApiResponse);
         }
@@ -148,7 +183,7 @@ public class WeatherInterfaceScheduler {
                     weatherInterface.setSunset(sunset.substring(1, 3) + ":" + sunset.substring(3, 5));
                 }
             }
-        } catch (JsonSyntaxException e){
+        } catch (JsonSyntaxException | ClassCastException e){
             System.out.println("sunriseSunsetApiResponse - 일몰 일출 데이터 응답 이상");
             System.out.println(sunriseSunsetApiResponse);
         }
@@ -168,7 +203,7 @@ public class WeatherInterfaceScheduler {
                     weatherInterface.setPm10(item.get("pm10Flag").isJsonNull() ? item.get("pm10Value").toString().replace("\"", "") : "");
                 }
             }
-        } catch (JsonSyntaxException e){
+        } catch (JsonSyntaxException | ClassCastException e){
             System.out.println("fineDustApiResponse - 미세 먼지 데이터 응답 이상");
             System.out.println(fineDustApiResponse);
         }
@@ -218,13 +253,13 @@ public class WeatherInterfaceScheduler {
             String baseDate = format.format(date);
             String baseTime = timeFormat.format(date) + "30";
 
-            urlBuilder.append("&" + URLEncoder.encode("numOfRows", "UTF-8") + "=" + URLEncoder.encode(weatherNumOfRows, "UTF-8"));              // 페이지 번호
-            urlBuilder.append("&" + URLEncoder.encode("pageNo", "UTF-8") + "=" + URLEncoder.encode(pageNo, "UTF-8"));                           // 한 페이지 결과 수
-            urlBuilder.append("&" + URLEncoder.encode("dataType", "UTF-8") + "=" + URLEncoder.encode(dataType, "UTF-8"));                       // 데이터 타입
-            urlBuilder.append("&" + URLEncoder.encode("base_date", "UTF-8") + "=" + URLEncoder.encode(baseDate, "UTF-8"));                      // 날짜
-            urlBuilder.append("&" + URLEncoder.encode("base_time", "UTF-8") + "=" + URLEncoder.encode(baseTime, "UTF-8"));                      // 시간
-            urlBuilder.append("&" + URLEncoder.encode("nx", "UTF-8") + "=" + URLEncoder.encode(nx, "UTF-8"));                                   // x 좌표
-            urlBuilder.append("&" + URLEncoder.encode("ny", "UTF-8") + "=" + URLEncoder.encode(ny, "UTF-8"));                                   // Y 좌표
+            urlBuilder.append("&" + URLEncoder.encode("numOfRows", "UTF-8") + "=" + URLEncoder.encode(weatherNumOfRows, encoding));              // 페이지 번호
+            urlBuilder.append("&" + URLEncoder.encode("pageNo", "UTF-8") + "=" + URLEncoder.encode(pageNo, encoding));                           // 한 페이지 결과 수
+            urlBuilder.append("&" + URLEncoder.encode("dataType", "UTF-8") + "=" + URLEncoder.encode(dataType, encoding));                       // 데이터 타입
+            urlBuilder.append("&" + URLEncoder.encode("base_date", "UTF-8") + "=" + URLEncoder.encode(baseDate, encoding));                      // 날짜
+            urlBuilder.append("&" + URLEncoder.encode("base_time", "UTF-8") + "=" + URLEncoder.encode(baseTime, encoding));                      // 시간
+            urlBuilder.append("&" + URLEncoder.encode("nx", "UTF-8") + "=" + URLEncoder.encode(nx, encoding));                                   // x 좌표
+            urlBuilder.append("&" + URLEncoder.encode("ny", "UTF-8") + "=" + URLEncoder.encode(ny, encoding));                                   // Y 좌표
 
         } else if(apiURL.contains("getAreaRiseSetInfo")) {              /* 일출,일몰 시간 */
             // 현재 날짜 구하기
@@ -233,16 +268,16 @@ public class WeatherInterfaceScheduler {
             SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
             String locdate = format.format(date);
 
-            urlBuilder.append("&" + URLEncoder.encode("location", "UTF-8") + "=" + URLEncoder.encode(sunsetSunriseApiLocation, "UTF-8"));       // 지역명
-            urlBuilder.append("&" + URLEncoder.encode("locdate", "UTF-8") + "=" + URLEncoder.encode(locdate, "UTF-8"));                         // 날짜
+            urlBuilder.append("&" + URLEncoder.encode("location", "UTF-8") + "=" + URLEncoder.encode(sunsetSunriseApiLocation, encoding));       // 지역명
+            urlBuilder.append("&" + URLEncoder.encode("locdate", "UTF-8") + "=" + URLEncoder.encode(locdate, encoding));                         // 날짜
 
         } else if(apiURL.contains("getMsrstnAcctoRltmMesureDnsty")){    /* 미세 먼지 */
-            urlBuilder.append("&" + URLEncoder.encode("returnType","UTF-8") + "=" + URLEncoder.encode(dataType, "UTF-8"));                      // 데이터 타입
-            urlBuilder.append("&" + URLEncoder.encode("numOfRows","UTF-8") + "=" + URLEncoder.encode(fineDustNumOfRows, "UTF-8"));              // 한 페이지 결과 수
-            urlBuilder.append("&" + URLEncoder.encode("pageNo","UTF-8") + "=" + URLEncoder.encode(pageNo, "UTF-8"));                            // 페이지 번호
-            urlBuilder.append("&" + URLEncoder.encode("stationName","UTF-8") + "=" + URLEncoder.encode(fineDustStationName, "UTF-8"));                    // 측정소 이름
-            urlBuilder.append("&" + URLEncoder.encode("dataTerm","UTF-8") + "=" + URLEncoder.encode("DAILY", "UTF-8"));                      // 요청 데이터기간
-            urlBuilder.append("&" + URLEncoder.encode("ver","UTF-8") + "=" + URLEncoder.encode("1.0", "UTF-8"));                             // 버전별 상세 결과 참고
+            urlBuilder.append("&" + URLEncoder.encode("returnType","UTF-8") + "=" + URLEncoder.encode(dataType, encoding));                      // 데이터 타입
+            urlBuilder.append("&" + URLEncoder.encode("numOfRows","UTF-8") + "=" + URLEncoder.encode(fineDustNumOfRows, encoding));              // 한 페이지 결과 수
+            urlBuilder.append("&" + URLEncoder.encode("pageNo","UTF-8") + "=" + URLEncoder.encode(pageNo, encoding));                            // 페이지 번호
+            urlBuilder.append("&" + URLEncoder.encode("stationName","UTF-8") + "=" + URLEncoder.encode(fineDustStationName, encoding));          // 측정소 이름
+            urlBuilder.append("&" + URLEncoder.encode("dataTerm","UTF-8") + "=" + URLEncoder.encode(fineDustDataTerm, encoding));                // 요청 데이터 기간
+            urlBuilder.append("&" + URLEncoder.encode("ver","UTF-8") + "=" + URLEncoder.encode(fineDustVersion, encoding));                      // 버전별 상세 결과 참고
 
         }
 
