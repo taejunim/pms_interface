@@ -1,4 +1,4 @@
-package pms.api.weatherInterface.model;
+package pms.api.weatherInterface.service.model;
 
 import lombok.Getter;
 import lombok.Setter;

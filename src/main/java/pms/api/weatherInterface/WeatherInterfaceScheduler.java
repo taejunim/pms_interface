@@ -6,10 +6,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-import pms.api.weatherInterface.model.WeatherInterface;
+import pms.api.weatherInterface.service.model.WeatherInterface;
 import pms.api.weatherInterface.service.WeatherInterfaceService;
 
 import java.io.UnsupportedEncodingException;
