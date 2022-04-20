@@ -30,7 +30,7 @@ import java.util.Date;
 @Component
 public class WeatherInterfaceScheduler {
 
-    private final pms.api.weatherInterface.service.WeatherInterfaceService WeatherInterfaceService;
+    private final WeatherInterfaceService WeatherInterfaceService;
 
     public WeatherInterfaceScheduler(WeatherInterfaceService weatherInterfaceService) {
         this.WeatherInterfaceService = weatherInterfaceService;
