@@ -121,16 +121,16 @@ public class ChargeDischargeSummaryController {
                 result.put("result", "Success");
             } else {
                 result.put("result", "FAIL");
-                result.put("message", "올바른 충/방전 타입(chargeType) 혹은 ESS 고정형/이동형 여부(positionFixYn)을 보내주세요.");
+                result.put("message", "올바른 충/방전 타입 혹은 ESS 고정형/이동형 여부를 보내주세요.");
             }
         } catch (NullPointerException | NumberFormatException e) {
             result.put("result", "FAIL");
             result.put("message", "전송하신 데이터를 확인하여 주십시오.");
         } catch (Exception e) {
-            System.out.println(e.getMessage());
             result.put("result", "FAIL");
             if (e.getMessage().contains("SQLIntegrityConstraintViolationException"))
                 result.put("message","기존에 존재하는 데이터입니다.");
+            else result.put("message",e.getMessage());
         }
 
         return ResponseEntity.ok(result);

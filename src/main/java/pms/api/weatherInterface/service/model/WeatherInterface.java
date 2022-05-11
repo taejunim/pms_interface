@@ -8,7 +8,7 @@ import lombok.Setter;
  *
  * ESS 정보
  *
- * Created by Youyeong Jo on 2022/94/15.
+ * Created by Youyeong Jo on 2022/04/15.
  */
 
 @Getter
