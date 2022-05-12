@@ -4,8 +4,11 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import pms.api.weatherInterface.service.model.WeatherInterface;
@@ -29,6 +32,9 @@ import java.util.Date;
 
 @Component
 public class WeatherInterfaceScheduler {
+
+    //로그 설정
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final WeatherInterfaceService WeatherInterfaceService;
 
@@ -98,10 +104,9 @@ public class WeatherInterfaceScheduler {
         final HttpEntity entity = new HttpEntity(new HttpHeaders());
 
         WeatherInterface weatherInterface = new WeatherInterface();
-
         /* 초단기 예보 데이터 START */
         URI weatherResponseURI = new URI(makeFullURI(weatherForecastApiUrl));
-        System.out.println("초단계 예보 데이터 URI --> " + weatherResponseURI);
+
         ResponseEntity<String> weatherApiResponse = restTemplate.exchange(weatherResponseURI, HttpMethod.GET, entity, String.class);
 
         try {
@@ -119,8 +124,7 @@ public class WeatherInterfaceScheduler {
             weatherInterface.setBaseTime(fcstTime);
 
             JsonObject weatherResult = getApiResultBody(weatherApiResponse);
-            System.out.println("초단계 예보 데이터 body");
-            System.out.println(weatherResult);
+
             if (weatherResult.size() > 0) {
                 JsonObject items = weatherResult.getAsJsonObject("items");
                 JsonArray item = items.getAsJsonArray("item");
@@ -160,19 +164,24 @@ public class WeatherInterfaceScheduler {
                     }
                 }
             }
-        } catch (JsonSyntaxException | ClassCastException e){
-            System.out.println("weatherApiResponse - 초단기 예보 데이터 응답 이상");
-            System.out.println(weatherApiResponse);
+        } catch (JsonSyntaxException | ClassCastException e) {
+            logger.error("weatherApiResponse - 초단기 예보 데이터 JsonSyntaxException/ClassCastException");
+            logger.debug("요청 URI :" + weatherResponseURI.toString());
+            logger.error(weatherApiResponse.toString());
+        } catch (Exception e) {
+            logger.error("weatherApiResponse - 초단기 예보 데이터 Exception");
+            logger.error("요청 URL : " + weatherResponseURI.toString());
+            logger.error(e.getMessage());
+            logger.error(weatherApiResponse.toString());
         }
         /* 초단기 예보 데이터 END */
+
         /* 일출,일몰 데이터 START */
         URI sunsetSunriseResponseURI = new URI(makeFullURI(sunriseSunsetApiUrl));
-        System.out.println("일몰 일출 데이터 URI --> " + sunsetSunriseResponseURI);
+
         ResponseEntity<String> sunriseSunsetApiResponse = restTemplate.exchange(sunsetSunriseResponseURI, HttpMethod.GET, entity, String.class);
         try {
             JsonObject sunriseSunsetResult = getApiResultBody(sunriseSunsetApiResponse);
-            System.out.println("일몰일출 데이터 body");
-            System.out.println(sunriseSunsetResult);
             if (sunriseSunsetResult.size() > 0) {
                 JsonObject items = (JsonObject) sunriseSunsetResult.get("items");
                 if (items.size() > 0) {
@@ -183,19 +192,24 @@ public class WeatherInterfaceScheduler {
                     weatherInterface.setSunset(sunset.substring(1, 3) + ":" + sunset.substring(3, 5));
                 }
             }
-        } catch (JsonSyntaxException | ClassCastException e){
-            System.out.println("sunriseSunsetApiResponse - 일몰 일출 데이터 응답 이상");
-            System.out.println(sunriseSunsetApiResponse);
+        } catch (JsonSyntaxException | ClassCastException e) {
+            logger.error("sunriseSunsetApiResponse - 일몰 일출 데이터 JsonSyntaxException/ClassCastException");
+            logger.error("요청 URI --> " + sunsetSunriseResponseURI.toString());
+            logger.error(sunriseSunsetApiResponse.toString());
+        } catch (Exception e) {
+            logger.error("sunriseSunsetApiResponse - 일몰 일출  데이터 Exception");
+            logger.error("요청 URL : " + sunsetSunriseResponseURI.toString());
+            logger.error(e.getMessage());
+            logger.error(sunriseSunsetApiResponse.toString());
         }
         /* 일출,일몰 데이터 END */
+
         /* 미세 먼지 데이터 START */
         URI fineDustResponseURI = new URI(makeFullURI(fineDustApiUrl));
-        System.out.println("미세먼지 데이터 URI --> " + fineDustResponseURI);
+
         ResponseEntity<String> fineDustApiResponse = restTemplate.exchange(fineDustResponseURI, HttpMethod.GET, entity, String.class);
         try {
             JsonObject fineDustResult = getApiResultBody(fineDustApiResponse);
-            System.out.println("미세먼지 데이터 body");
-            System.out.println(fineDustResult);
             if (fineDustResult.size() > 0) {
                 JsonArray items = (JsonArray) fineDustResult.get("items");
                 if (items.size() > 0) {
@@ -203,9 +217,15 @@ public class WeatherInterfaceScheduler {
                     weatherInterface.setPm10(item.get("pm10Flag").isJsonNull() ? item.get("pm10Value").toString().replace("\"", "") : "");
                 }
             }
-        } catch (JsonSyntaxException | ClassCastException e){
-            System.out.println("fineDustApiResponse - 미세 먼지 데이터 응답 이상");
-            System.out.println(fineDustApiResponse);
+        } catch (JsonSyntaxException | ClassCastException e) {
+            logger.error("fineDustApiResponse - 미세 먼지 데이터 JsonSyntaxException/ClassCastException");
+            logger.error("요청 URL : " + fineDustResponseURI.toString());
+            logger.error(fineDustApiResponse.toString());
+        } catch (Exception e) {
+            logger.error("fineDustApiResponse - 미세 먼지 데이터 Exception");
+            logger.error("요청 URL : " + fineDustResponseURI.toString());
+            logger.error(e.getMessage());
+            logger.error(fineDustApiResponse.toString());
         }
         /* 미세 먼지 데이터 END */
         WeatherInterfaceService.insertWeatherData(weatherInterface);

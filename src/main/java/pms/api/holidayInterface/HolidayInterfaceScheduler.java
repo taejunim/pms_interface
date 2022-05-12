@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -30,6 +32,9 @@ import java.util.List;
  */
 @Component
 public class HolidayInterfaceScheduler {
+
+    //로그 설정
+    private static final Logger logger = LoggerFactory.getLogger(HolidayInterfaceScheduler.class);
 
     private static HolidayInterfaceService holidayInterfaceService;
 
@@ -113,14 +118,18 @@ public class HolidayInterfaceScheduler {
                 Type listType = new TypeToken<ArrayList<HolidayInterface>>() {
                 }.getType();
                 List<HolidayInterface> apiResultBody = gson.fromJson(jsonObject.get("item").toString(), listType);
-
                 if (apiResultBody.size() > 0) {
                     holidayInterfaceService.insertHolidayData(apiResultBody);
                 }
             }
-        } catch (JsonSyntaxException | ClassCastException e){
-            System.out.println("holidayApiResponse - 공휴일 데이터 응답 이상");
-            System.out.println(holidayApiResponse);
+        } catch (JsonSyntaxException | ClassCastException e) {
+            logger.error("holidayApiResponse - 공휴일 데이터 JsonSyntaxException | ClassCastException");
+            logger.error("요청 URI" + apiURl);
+            logger.error(holidayApiResponse.toString());
+        } catch (Exception e) {
+            logger.error("holidayApiResponse - 공휴일 데이터 Exception");
+            logger.error("요청 URI" + apiURl);
+            logger.error(e.getMessage());
         }
     }
 }
