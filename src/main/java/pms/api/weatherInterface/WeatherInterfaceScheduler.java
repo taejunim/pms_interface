@@ -166,7 +166,7 @@ public class WeatherInterfaceScheduler {
             }
         } catch (JsonSyntaxException | ClassCastException e) {
             logger.error("weatherApiResponse - 초단기 예보 데이터 JsonSyntaxException/ClassCastException");
-            logger.debug("요청 URI :" + weatherResponseURI.toString());
+            logger.error("요청 URI :" + weatherResponseURI.toString());
             logger.error(weatherApiResponse.toString());
         } catch (Exception e) {
             logger.error("weatherApiResponse - 초단기 예보 데이터 Exception");

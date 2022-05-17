@@ -2,6 +2,7 @@ package pms.api.essApi.service;
 
 import org.springframework.stereotype.Service;
 import pms.api.essApi.service.model.ChargeDischargeInsertData;
+import pms.api.essApi.service.model.ChargeDischargeSummary;
 
 /**
  * ChargeDischargeSummaryService.java
@@ -16,6 +17,14 @@ public class ChargeDischargeSummaryService {
 
     public ChargeDischargeSummaryService(ChargeDischargeSummaryMapper chargeDischargeSummaryMapper) {
         this.chargeDischargeSummaryMapper = chargeDischargeSummaryMapper;
+    }
+
+
+    /**
+     * ESS IDX 가져오기
+     */
+    public ChargeDischargeInsertData getEssIdx(ChargeDischargeSummary chargeDischargeSummary){
+        return chargeDischargeSummaryMapper.getEssIdx(chargeDischargeSummary);
     }
 
     /**
@@ -74,4 +83,31 @@ public class ChargeDischargeSummaryService {
         chargeDischargeSummaryMapper.insert60MobileDischargeData(chargeDischargeInsertData);
     }
 
+    /**
+     * 하루 고정형 충전 Summary 등록
+     */
+    public void insertDayFixChargeData(ChargeDischargeInsertData chargeDischargeInsertData){
+        chargeDischargeSummaryMapper.insertDayFixChargeData(chargeDischargeInsertData);
+    }
+
+    /**
+     * 하루 고정형 방전 Summary 등록
+     */
+    public void insertDayFixDischargeData(ChargeDischargeInsertData chargeDischargeInsertData){
+        chargeDischargeSummaryMapper.insertDayFixDischargeData(chargeDischargeInsertData);
+    }
+
+    /**
+     * 하루 이동형 충전 Summary 등록
+     */
+    public void insertDayMobileChargeData(ChargeDischargeInsertData chargeDischargeInsertData){
+        chargeDischargeSummaryMapper.insertDayMobileChargeData(chargeDischargeInsertData);
+    }
+
+    /**
+     * 하루 이동형 방전 Summary 등록
+     */
+    public void insertDayMobileDischargeData(ChargeDischargeInsertData chargeDischargeInsertData){
+        chargeDischargeSummaryMapper.insertDayMobileDischargeData(chargeDischargeInsertData);
+    }
 }

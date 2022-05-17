@@ -21,6 +21,8 @@ public class ChargeDischargeSummary {
     private String meteringDt;
     @Schema(name = "chargeDischargeAmount", description = "충/방전량", example = "0")
     private String chargeDischargeAmount;
+    @Schema(name = "accumulateAmount", description = "누적 충/방전량", example = "0")
+    private String accumulateAmount;
     @Schema(name = "chargeType", description = "충/방전 타입 chg / dis", example = "chg")
     private String chargeType;
     @Schema(name = "positionFixYn", description = "고정형/이동형 구분 fix / mob", example = "fix")

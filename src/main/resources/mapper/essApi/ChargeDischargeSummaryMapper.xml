@@ -2,45 +2,84 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="pms.api.essApi.service.ChargeDischargeSummaryMapper">
+    <!-- ESS IDX 가져오기 -->
+    <select id="getEssIdx" parameterType="ChargeDischargeSummary" resultType="ChargeDischargeInsertData">
+        SELECT ess_idx AS essIdx
+        FROM tb_ess
+        WHERE ess_equip_id = #{essEquipId}
+    </select>
     <!-- 15분 고정형 충전 데이터 INSERT -->
     <insert id="insert15FixChargeData" parameterType="ChargeDischargeInsertData">
-        INSERT INTO tb_esscharge_15m(ess_equip_id, metering_date, hhmm, charge)
-        VALUE (#{essEquipId},#{meteringDate},#{meteringTime},#{chargeDischargeAmount})
+        INSERT INTO tb_esscharge_15m(ess_idx, ess_equip_id, metering_date, hhmm, charge, accmlt_charge)
+        VALUE (#{essIdx},#{essEquipId},#{meteringDate},#{meteringTime},#{chargeDischargeAmount},#{accumulateAmount})
     </insert>
     <!-- 15분 고정형 방전 데이터 INSERT -->
     <insert id="insert15FixDischargeData" parameterType="ChargeDischargeInsertData">
-        INSERT INTO tb_essdischarge_15m(ess_equip_id, metering_date, hhmm, discharge)
-        VALUE (#{essEquipId},#{meteringDate},#{meteringTime},#{chargeDischargeAmount})
+        INSERT INTO tb_essdischarge_15m(ess_idx, ess_equip_id, metering_date, hhmm, discharge, accmlt_discharge)
+        VALUE (#{essIdx},#{essEquipId},#{meteringDate},#{meteringTime},#{chargeDischargeAmount},#{accumulateAmount})
     </insert>
     <!-- 15분 이동형 충전 데이터 INSERT -->
     <insert id="insert15MobileChargeData" parameterType="ChargeDischargeInsertData">
-        INSERT INTO tb_messcharge_15m(ess_equip_id, metering_date, hhmm, charge)
-        VALUE (#{essEquipId},#{meteringDate},#{meteringTime},#{chargeDischargeAmount})
+        INSERT INTO tb_messcharge_15m(ess_idx, ess_equip_id, metering_date, hhmm, charge, accmlt_charge)
+        VALUE (#{essIdx},#{essEquipId},#{meteringDate},#{meteringTime},#{chargeDischargeAmount},#{accumulateAmount})
     </insert>
     <!-- 15분 이동형 방전 데이터 INSERT -->
     <insert id="insert15MobileDischargeData" parameterType="ChargeDischargeInsertData">
-        INSERT INTO tb_messdischarge_15m(ess_equip_id, metering_date, hhmm, discharge)
-        VALUE (#{essEquipId},#{meteringDate},#{meteringTime},#{chargeDischargeAmount})
+        INSERT INTO tb_messdischarge_15m(ess_idx, ess_equip_id, metering_date, hhmm, discharge, accmlt_discharge)
+        VALUE (#{essIdx},#{essEquipId},#{meteringDate},#{meteringTime},#{chargeDischargeAmount},#{accumulateAmount})
     </insert>
 
     <!-- 한시간 고정형 충전 데이터 INSERT -->
     <insert id="insert60FixChargeData" parameterType="ChargeDischargeInsertData">
-        INSERT INTO tb_esscharge_hour(ess_equip_id, metering_date, hh, charge)
-        VALUE (#{essEquipId},#{meteringDate},#{meteringTime},#{chargeDischargeAmount})
+        INSERT INTO tb_esscharge_hour(ess_idx, ess_equip_id, metering_date, hh, charge, accmlt_charge)
+        VALUE (#{essIdx},#{essEquipId},#{meteringDate},#{meteringTime},#{chargeDischargeAmount},#{accumulateAmount})
     </insert>
     <!-- 한시간 고정형 방전 데이터 INSERT -->
     <insert id="insert60FixDischargeData" parameterType="ChargeDischargeInsertData">
-        INSERT INTO tb_essdischarge_hour(ess_equip_id, metering_date, hh, discharge)
-        VALUE (#{essEquipId},#{meteringDate},#{meteringTime},#{chargeDischargeAmount})
+        INSERT INTO tb_essdischarge_hour(ess_idx, ess_equip_id, metering_date, hh, discharge, accmlt_discharge)
+        VALUE (#{essIdx},#{essEquipId},#{meteringDate},#{meteringTime},#{chargeDischargeAmount},#{accumulateAmount})
     </insert>
     <!-- 한시간 이동형 충전 데이터 INSERT -->
     <insert id="insert60MobileChargeData" parameterType="ChargeDischargeInsertData">
-        INSERT INTO tb_messcharge_hour(ess_equip_id, metering_date, hh, charge)
-        VALUE (#{essEquipId},#{meteringDate},#{meteringTime},#{chargeDischargeAmount})
+        INSERT INTO tb_messcharge_hour(ess_idx, ess_equip_id, metering_date, hh, charge, accmlt_charge)
+        VALUE (#{essIdx},#{essEquipId},#{meteringDate},#{meteringTime},#{chargeDischargeAmount},#{accumulateAmount})
     </insert>
     <!-- 한시간 이동형 방전 데이터 INSERT -->
     <insert id="insert60MobileDischargeData" parameterType="ChargeDischargeInsertData">
-        INSERT INTO tb_messdischarge_hour(ess_equip_id, metering_date, hh, discharge)
-        VALUE (#{essEquipId},#{meteringDate},#{meteringTime},#{chargeDischargeAmount})
+        INSERT INTO tb_messdischarge_hour(ess_idx, ess_equip_id, metering_date, hh, discharge, accmlt_discharge)
+        VALUE (#{essIdx},#{essEquipId},#{meteringDate},#{meteringTime},#{chargeDischargeAmount},#{accumulateAmount})
+    </insert>
+
+    <!-- 하루 고정형 충전 데이터 INSERT -->
+    <insert id="insertDayFixChargeData" parameterType="ChargeDischargeInsertData">
+        INSERT INTO tb_esscharge_day(metering_date, ess_idx, ess_equip_id, charge, accmlt_charge)
+        VALUE (#{meteringDate}, #{essIdx}, #{essEquipId}, #{chargeDischargeAmount} , #{accumulateAmount})
+        ON DUPLICATE KEY UPDATE
+        charge = #{chargeDischargeAmount} ,
+        accmlt_charge = #{accumulateAmount}
+    </insert>
+    <!-- 하루 고정형 방전 데이터 INSERT -->
+    <insert id="insertDayFixDischargeData" parameterType="ChargeDischargeInsertData">
+        INSERT INTO tb_essdischarge_day(metering_date, ess_idx, ess_equip_id, discharge, accmlt_discharge)
+        VALUE (#{meteringDate}, #{essIdx}, #{essEquipId}, #{chargeDischargeAmount} , #{accumulateAmount})
+        ON DUPLICATE KEY UPDATE
+        discharge = #{chargeDischargeAmount} ,
+        accmlt_discharge = #{accumulateAmount}
+    </insert>
+    <!-- 하루 이동형 충전 데이터 INSERT -->
+    <insert id="insertDayMobileChargeData" parameterType="ChargeDischargeInsertData">
+        INSERT INTO tb_messcharge_day(metering_date, ess_idx, ess_equip_id, charge, accmlt_charge)
+        VALUE (#{meteringDate}, #{essIdx}, #{essEquipId}, #{chargeDischargeAmount} , #{accumulateAmount})
+        ON DUPLICATE KEY UPDATE
+        charge = #{chargeDischargeAmount} ,
+        accmlt_charge = #{accumulateAmount}
+    </insert>
+    <!-- 하루 이동형 방전 데이터 INSERT -->
+    <insert id="insertDayMobileDischargeData" parameterType="ChargeDischargeInsertData">
+        INSERT INTO tb_messdischarge_day(metering_date, ess_idx, ess_equip_id, discharge, accmlt_discharge)
+        VALUE (#{meteringDate}, #{essIdx}, #{essEquipId}, #{chargeDischargeAmount} , #{accumulateAmount})
+        ON DUPLICATE KEY UPDATE
+        discharge = #{chargeDischargeAmount} ,
+        accmlt_discharge = #{accumulateAmount}
     </insert>
 </mapper>

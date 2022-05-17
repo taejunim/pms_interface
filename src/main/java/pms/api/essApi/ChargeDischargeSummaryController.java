@@ -58,9 +58,10 @@ public class ChargeDischargeSummaryController {
             Date meteringDt = new Date(getMeteringDt * 1000L);
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 
-            ChargeDischargeInsertData chargeDischargeInsertData = new ChargeDischargeInsertData();
+            ChargeDischargeInsertData chargeDischargeInsertData = chargeDischargeSummaryService.getEssIdx(chargeDischargeSummary);
             chargeDischargeInsertData.setEssEquipId(chargeDischargeSummary.getEssEquipId());
             chargeDischargeInsertData.setChargeDischargeAmount(chargeDischargeSummary.getChargeDischargeAmount());
+            chargeDischargeInsertData.setAccumulateAmount(chargeDischargeSummary.getAccumulateAmount());
             chargeDischargeInsertData.setMeteringDate(dateFormat.format(meteringDt));
 
             String timeFormatType = "";
@@ -81,7 +82,7 @@ public class ChargeDischargeSummaryController {
                 else if(timeFormatType.equals("HH"))
                     chargeDischargeSummaryService.insert60FixChargeData(chargeDischargeInsertData);
                 //하루 단위 데이터
-                else System.out.println("하루 단위 테이블 생성 후 구현 예정");
+                else chargeDischargeSummaryService.insertDayFixChargeData(chargeDischargeInsertData);
                 result.put("result", "Success");
             }
             //충전 - 이동형
@@ -93,7 +94,7 @@ public class ChargeDischargeSummaryController {
                 else if(timeFormatType.equals("HH"))
                     chargeDischargeSummaryService.insert60MobileChargeData(chargeDischargeInsertData);
                 //하루 단위 데이터
-                else System.out.println("하루 단위 테이블 생성 후 구현 예정");
+                else chargeDischargeSummaryService.insertDayMobileChargeData(chargeDischargeInsertData);
                 result.put("result", "Success");
             }
             //방전 - 고정형
@@ -105,7 +106,7 @@ public class ChargeDischargeSummaryController {
                 else if(timeFormatType.equals("HH"))
                     chargeDischargeSummaryService.insert60FixDischargeData(chargeDischargeInsertData);
                 //하루 단위 데이터
-                else System.out.println("하루 단위 테이블 생성 후 구현 예정");
+                else chargeDischargeSummaryService.insertDayFixDischargeData(chargeDischargeInsertData);
                 result.put("result", "Success");
             }
             //방전 - 이동형
@@ -117,7 +118,7 @@ public class ChargeDischargeSummaryController {
                 else if(timeFormatType.equals("HH"))
                     chargeDischargeSummaryService.insert60MobileDischargeData(chargeDischargeInsertData);
                 //하루 단위 데이터
-                else System.out.println("하루 단위 테이블 생성 후 구현 예정");
+                else chargeDischargeSummaryService.insertDayMobileDischargeData(chargeDischargeInsertData);
                 result.put("result", "Success");
             } else {
                 result.put("result", "FAIL");
