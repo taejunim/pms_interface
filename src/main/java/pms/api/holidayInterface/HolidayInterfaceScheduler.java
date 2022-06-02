@@ -114,11 +114,19 @@ public class HolidayInterfaceScheduler {
                 jsonObject = jsonObject.getAsJsonObject("body");
                 jsonObject = jsonObject.getAsJsonObject("items");
 
-                //VO 형태로 자동 파싱
-                Type listType = new TypeToken<ArrayList<HolidayInterface>>() {
-                }.getType();
-                List<HolidayInterface> apiResultBody = gson.fromJson(jsonObject.get("item").toString(), listType);
-                if (apiResultBody.size() > 0) {
+                if(jsonObject.get("item").isJsonArray()){
+                    //VO 형태로 자동 파싱
+                    Type listType = new TypeToken<ArrayList<HolidayInterface>>() {
+                    }.getType();
+                    List<HolidayInterface> apiResultBody = gson.fromJson(jsonObject.get("item").toString(), listType);
+                    holidayInterfaceService.insertHolidayData(apiResultBody);
+
+                } else {
+                    //VO 형태로 자동 파싱
+                    Type type = new TypeToken<HolidayInterface>() {
+                    }.getType();
+                    List<HolidayInterface> apiResultBody = new ArrayList<>();
+                    apiResultBody.add(gson.fromJson(jsonObject.get("item").toString(), type));
                     holidayInterfaceService.insertHolidayData(apiResultBody);
                 }
             }
