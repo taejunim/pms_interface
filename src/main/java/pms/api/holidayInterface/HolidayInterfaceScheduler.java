@@ -134,10 +134,6 @@ public class HolidayInterfaceScheduler {
             logger.error("holidayApiResponse - 공휴일 데이터 JsonSyntaxException | ClassCastException");
             logger.error("요청 URI" + apiURl);
             logger.error(holidayApiResponse.toString());
-        } catch (Exception e) {
-            logger.error("holidayApiResponse - 공휴일 데이터 Exception");
-            logger.error("요청 URI" + apiURl);
-            logger.error(e.getMessage());
         }
     }
 }

@@ -21,6 +21,7 @@ import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * WeatherInterfaceScheduler.java
@@ -123,55 +124,54 @@ public class WeatherInterfaceScheduler {
             weatherInterface.setBaseDate(fcstDate);
             weatherInterface.setBaseTime(fcstTime);
 
-            JsonObject weatherResult = getApiResultBody(weatherApiResponse);
+            logger.debug("weatherApiResponse : " +  weatherApiResponse);
 
-            if (weatherResult.size() > 0) {
-                JsonObject items = weatherResult.getAsJsonObject("items");
-                JsonArray item = items.getAsJsonArray("item");
+            if(!Objects.requireNonNull(weatherApiResponse.getBody()).contains("html")) {
+                JsonObject weatherResult = getApiResultBody(weatherApiResponse);
 
-                for (int i = 0; i < item.size(); i++) {
-                    JsonObject indexItem = (JsonObject) item.get(i);
-                    /*
-                     * - 자료구분 코드 정보
-                     *    T1H - 기온 (단위: ℃)
-                     *    SKY - 하늘상태 (맑음, 구름많음, 흐림)
-                     *    REH - 습도 (단위: %)
-                     *    PCP - 1시간 강수량
-                     *    WSD - 풍속 (단위: m/s)
-                     */
-                    if (indexItem.get("fcstTime").toString().contains(fcstTime)) {
-                        String category = indexItem.get("category").toString().replace("\"", "");
+                if (weatherResult != null && weatherResult.size() > 0) {
+                    JsonObject items = weatherResult.getAsJsonObject("items");
+                    JsonArray item = items.getAsJsonArray("item");
 
-                        switch (category) {
-                            case "T1H":
-                                weatherInterface.setTemp(indexItem.get("fcstValue").getAsInt());
-                                break;
-                            case "SKY":
-                                weatherInterface.setSky(Integer.parseInt(indexItem.get("fcstValue").toString().replace("\"", "")));
-                                break;
-                            case "REH":
-                                weatherInterface.setReh(indexItem.get("fcstValue").getAsString());
-                                break;
-                            case "PCP":
-                                weatherInterface.setRn1(Integer.parseInt(indexItem.get("fcstValue").toString().replace("\"", "")));
-                                break;
-                            case "WSD":
-                                weatherInterface.setWsd(indexItem.get("fcstValue").toString().replace("\"", ""));
-                                break;
-                            default:
-                                break;
+                    for (int i = 0; i < item.size(); i++) {
+                        JsonObject indexItem = (JsonObject) item.get(i);
+                        /*
+                         * - 자료구분 코드 정보
+                         *    T1H - 기온 (단위: ℃)
+                         *    SKY - 하늘상태 (맑음, 구름많음, 흐림)
+                         *    REH - 습도 (단위: %)
+                         *    PCP - 1시간 강수량
+                         *    WSD - 풍속 (단위: m/s)
+                         */
+                        if (indexItem.get("fcstTime").toString().contains(fcstTime)) {
+                            String category = indexItem.get("category").toString().replace("\"", "");
+
+                            switch (category) {
+                                case "T1H":
+                                    weatherInterface.setTemp(indexItem.get("fcstValue").getAsInt());
+                                    break;
+                                case "SKY":
+                                    weatherInterface.setSky(Integer.parseInt(indexItem.get("fcstValue").toString().replace("\"", "")));
+                                    break;
+                                case "REH":
+                                    weatherInterface.setReh(indexItem.get("fcstValue").getAsString());
+                                    break;
+                                case "PCP":
+                                    weatherInterface.setRn1(Integer.parseInt(indexItem.get("fcstValue").toString().replace("\"", "")));
+                                    break;
+                                case "WSD":
+                                    weatherInterface.setWsd(indexItem.get("fcstValue").toString().replace("\"", ""));
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
                     }
                 }
             }
-        } catch (JsonSyntaxException | ClassCastException e) {
-            logger.error("weatherApiResponse - 초단기 예보 데이터 JsonSyntaxException/ClassCastException");
+        } catch (NullPointerException | JsonSyntaxException | ClassCastException e) {
+            logger.error("weatherApiResponse - 초단기 예보 데이터 JsonSyntaxException/ClassCastException/NullPointerException");
             logger.error("요청 URI :" + weatherResponseURI.toString());
-            logger.error(weatherApiResponse.toString());
-        } catch (Exception e) {
-            logger.error("weatherApiResponse - 초단기 예보 데이터 Exception");
-            logger.error("요청 URL : " + weatherResponseURI.toString());
-            logger.error(e.getMessage());
             logger.error(weatherApiResponse.toString());
         }
         /* 초단기 예보 데이터 END */
@@ -181,25 +181,25 @@ public class WeatherInterfaceScheduler {
 
         ResponseEntity<String> sunriseSunsetApiResponse = restTemplate.exchange(sunsetSunriseResponseURI, HttpMethod.GET, entity, String.class);
         try {
-            JsonObject sunriseSunsetResult = getApiResultBody(sunriseSunsetApiResponse);
-            if (sunriseSunsetResult.size() > 0) {
-                JsonObject items = (JsonObject) sunriseSunsetResult.get("items");
-                if (items.size() > 0) {
-                    JsonObject item = items.getAsJsonObject("item");
-                    String sunrise = item.get("sunrise").toString();
-                    String sunset = item.get("sunset").toString();
-                    weatherInterface.setSunrise(sunrise.substring(1, 3) + ":" + sunrise.substring(3, 5));
-                    weatherInterface.setSunset(sunset.substring(1, 3) + ":" + sunset.substring(3, 5));
+
+            logger.debug("sunriseSunsetApiResponse : " +  sunriseSunsetApiResponse);
+
+            if(!Objects.requireNonNull(sunriseSunsetApiResponse.getBody()).contains("html")) {
+                JsonObject sunriseSunsetResult = getApiResultBody(sunriseSunsetApiResponse);
+                if (sunriseSunsetResult != null && sunriseSunsetResult.size() > 0) {
+                    JsonObject items = (JsonObject) sunriseSunsetResult.get("items");
+                    if (items.size() > 0) {
+                        JsonObject item = items.getAsJsonObject("item");
+                        String sunrise = item.get("sunrise").toString();
+                        String sunset = item.get("sunset").toString();
+                        weatherInterface.setSunrise(sunrise.substring(1, 3) + ":" + sunrise.substring(3, 5));
+                        weatherInterface.setSunset(sunset.substring(1, 3) + ":" + sunset.substring(3, 5));
+                    }
                 }
             }
-        } catch (JsonSyntaxException | ClassCastException e) {
-            logger.error("sunriseSunsetApiResponse - 일몰 일출 데이터 JsonSyntaxException/ClassCastException");
+        } catch (NullPointerException | JsonSyntaxException | ClassCastException e) {
+            logger.error("sunriseSunsetApiResponse - 일몰 일출 데이터 JsonSyntaxException/ClassCastException/NullPointerException");
             logger.error("요청 URI --> " + sunsetSunriseResponseURI.toString());
-            logger.error(sunriseSunsetApiResponse.toString());
-        } catch (Exception e) {
-            logger.error("sunriseSunsetApiResponse - 일몰 일출  데이터 Exception");
-            logger.error("요청 URL : " + sunsetSunriseResponseURI.toString());
-            logger.error(e.getMessage());
             logger.error(sunriseSunsetApiResponse.toString());
         }
         /* 일출,일몰 데이터 END */
@@ -208,23 +208,24 @@ public class WeatherInterfaceScheduler {
         URI fineDustResponseURI = new URI(makeFullURI(fineDustApiUrl));
 
         ResponseEntity<String> fineDustApiResponse = restTemplate.exchange(fineDustResponseURI, HttpMethod.GET, entity, String.class);
+
         try {
-            JsonObject fineDustResult = getApiResultBody(fineDustApiResponse);
-            if (fineDustResult.size() > 0) {
-                JsonArray items = (JsonArray) fineDustResult.get("items");
-                if (items.size() > 0) {
-                    JsonObject item = (JsonObject) items.get(0);
-                    weatherInterface.setPm10(item.get("pm10Flag").isJsonNull() ? item.get("pm10Value").toString().replace("\"", "") : "");
+
+            logger.debug("fineDustApiResponse : " +  fineDustApiResponse);
+
+            if(!Objects.requireNonNull(fineDustApiResponse.getBody()).contains("html")) {
+                JsonObject fineDustResult = getApiResultBody(fineDustApiResponse);
+                if (fineDustResult != null && fineDustResult.size() > 0) {
+                    JsonArray items = (JsonArray) fineDustResult.get("items");
+                    if (items.size() > 0) {
+                        JsonObject item = (JsonObject) items.get(0);
+                        weatherInterface.setPm10(item.get("pm10Flag").isJsonNull() ? item.get("pm10Value").toString().replace("\"", "") : "");
+                    }
                 }
             }
-        } catch (JsonSyntaxException | ClassCastException e) {
+        } catch (NullPointerException | JsonSyntaxException | ClassCastException e) {
             logger.error("fineDustApiResponse - 미세 먼지 데이터 JsonSyntaxException/ClassCastException");
             logger.error("요청 URL : " + fineDustResponseURI.toString());
-            logger.error(fineDustApiResponse.toString());
-        } catch (Exception e) {
-            logger.error("fineDustApiResponse - 미세 먼지 데이터 Exception");
-            logger.error("요청 URL : " + fineDustResponseURI.toString());
-            logger.error(e.getMessage());
             logger.error(fineDustApiResponse.toString());
         }
         /* 미세 먼지 데이터 END */

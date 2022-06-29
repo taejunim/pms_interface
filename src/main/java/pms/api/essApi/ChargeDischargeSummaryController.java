@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -127,7 +128,7 @@ public class ChargeDischargeSummaryController {
         } catch (NullPointerException | NumberFormatException e) {
             result.put("result", "FAIL");
             result.put("message", "전송하신 데이터를 확인하여 주십시오.");
-        } catch (Exception e) {
+        } catch (DataIntegrityViolationException e) {
             result.put("result", "FAIL");
             if (e.getMessage().contains("SQLIntegrityConstraintViolationException"))
                 result.put("message","기존에 존재하는 데이터입니다.");

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pms.api.kepcoAmi.service.KepcoAmiMapper">
+    <!-- EDSM에 등록된 AMI중, DB에도 저장된 값 찾기 -->
+    <select id="getRegisterAmi" parameterType="HashMap" resultType="KepcoAmi">
+        SELECT a.ami_idx amiIdx,
+               a.mid     meterNo,
+               b.custNo  custNo
+        FROM tb_ami a,
+             (
+        <foreach collection="list" index="index" item="item" separator="UNION ALL">
+            SELECT #{item.meterNo} AS meterNo , #{item.custNo} AS custNo
+        </foreach>
+             ) b
+        WHERE mid IN (
+        <foreach collection="list" index="index" item="item" separator=",">
+            #{item.meterNo}
+        </foreach>
+        )
+        AND a.mid = b.meterNo
+    </select>
+
+    <!-- 한전 AMI 15분 데이터 등록 -->
+    <insert id="insertAmi15MinuteData" parameterType="KepcoAmi">
+        INSERT INTO tb_kepco_15m(
+                                    metering_date,
+                                    hhmm,
+                                    ami_idx,
+                                    use_type,
+                                    reg_dt,
+                                    mid,
+                                    kepco_cstmr_no,
+                                    metering_val,
+                                    accmlt_metering_val
+                                 )
+        VALUES
+        <foreach collection="list" index="index" item="item" separator=",">
+            (
+                #{item.meteringDate},
+                #{item.meteringTime},
+                #{item.amiIdx},
+                '1',
+                sysdate(),
+                #{item.meterNo},
+                #{item.custNo},
+                #{item.meteringVal},
+                <choose>
+                    <when test="item.accmltMeteringVal != null and item.accmltMeteringVal != ''">
+                        #{item.accmltMeteringVal}
+                    </when>
+                    <otherwise>
+                        IFNULL((SELECT accmlt_metering_val FROM (SELECT MAX(accmlt_metering_val) AS accmlt_metering_val FROM tb_kepco_15m WHERE ami_idx = #{item.amiIdx}) AS a), 0)
+                    </otherwise>
+                </choose>
+            )
+        </foreach>
+    </insert>
+
+    <!-- 한전 AMI 한시간 데이터 등록 -->
+    <insert id="insertAmiHourData" parameterType="KepcoAmi">
+        INSERT INTO tb_kepco_hour(
+                metering_date,
+                hh,
+                ami_idx,
+                use_type,
+                reg_dt,
+                mid,
+                kepco_cstmr_no,
+                metering_val,
+                accmlt_metering_val
+                )
+            SELECT *
+            FROM (
+            <foreach collection="list" index="index" item="item" separator="UNION ALL">
+                    (
+                    SELECT
+                        DATE_FORMAT(DATE_ADD(DATE_FORMAT(CONCAT( #{item.meteringDate}, #{item.meteringTime},'00'),'%Y%m%d%H%i%s'), INTERVAL -15 MINUTE ),'%Y%m%d'),
+                        DATE_FORMAT(DATE_ADD(DATE_FORMAT(CONCAT( #{item.meteringDate}, #{item.meteringTime},'00'),'%Y%m%d%H%i%s'), INTERVAL -15 MINUTE),'%H'),
+                        #{item.amiIdx},
+                        '1',
+                        sysdate(),
+                        #{item.meterNo},
+                        #{item.custNo},
+                        #{item.meteringVal} AS meteringVal,
+                        <choose>
+                            <when test="item.accmltMeteringVal != null and item.accmltMeteringVal != ''">
+                                #{item.accmltMeteringVal} AS accmltMeteringVal
+                            </when>
+                            <otherwise>
+                                IFNULL((SELECT accmlt_metering_val
+                                        FROM (SELECT MAX(accmlt_metering_val) AS accmlt_metering_val
+                                              FROM tb_kepco_15m WHERE ami_idx = #{item.amiIdx} AND use_type = '1') AS a), #{item.meteringVal}
+                                        ) AS accmltMeteringVal
+                            </otherwise>
+                        </choose>
+                  )
+            </foreach>
+            ) AS A
+
+        ON DUPLICATE KEY UPDATE
+        metering_val = metering_val + meteringVal,
+        accmlt_metering_val = accmltMeteringVal
+    </insert>
+
+    <!-- 한전 AMI 하루 데이터 등록 -->
+    <insert id="insertAmiDayData" parameterType="KepcoAmi">
+        INSERT INTO tb_kepco_day(
+        metering_date,
+        ami_idx,
+        use_type,
+        reg_dt,
+        mid,
+        kepco_cstmr_no,
+        metering_val,
+        accmlt_metering_val
+        )
+        SELECT *
+        FROM (
+        <foreach collection="list" index="index" item="item" separator="UNION ALL">
+            (
+            SELECT
+            DATE_FORMAT(DATE_ADD(DATE_FORMAT(CONCAT( #{item.meteringDate}, #{item.meteringTime},'00'),'%Y%m%d%H%i%s'), INTERVAL -15 MINUTE ),'%Y%m%d'),
+            #{item.amiIdx},
+            '1',
+            sysdate(),
+            #{item.meterNo},
+            #{item.custNo},
+            #{item.meteringVal} AS meteringVal,
+            <choose>
+                <when test="item.accmltMeteringVal != null and item.accmltMeteringVal != ''">
+                    #{item.accmltMeteringVal} AS accmltMeteringVal
+                </when>
+                <otherwise>
+                    IFNULL((SELECT accmlt_metering_val
+                    FROM (SELECT MAX(accmlt_metering_val) AS accmlt_metering_val
+                    FROM tb_kepco_hour WHERE ami_idx = #{item.amiIdx} AND use_type = '1') AS a), #{item.meteringVal}
+                    ) AS accmltMeteringVal
+                </otherwise>
+            </choose>
+            )
+        </foreach>
+        ) AS A
+
+        ON DUPLICATE KEY UPDATE
+        metering_val = metering_val + meteringVal,
+        accmlt_metering_val = accmltMeteringVal
+    </insert>
+</mapper>
