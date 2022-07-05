@@ -59,12 +59,27 @@ public class HolidayInterfaceScheduler {
 
     /**
      * getHolidayData()
-     * 매달 말일에 공휴일 API 호출 하여 응답값 DB에 저장
+     * 매달 말일에 공휴일 API 호출 하여 응답값 DB에 저장(매일 23시 55분에 현재가 말일인지 체크)
      * 매달 말일 23시 55분 실행
      **/
-    @Scheduled(cron="0 55 23 L * ?")
+    @Scheduled(cron="0 55 23 * * ?")
     public void getHolidayData() throws URISyntaxException {
-        insertHolidayData(false);
+
+        logger.debug("공휴일 Scheduler 실행 ====>");
+
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat format = new SimpleDateFormat ( "dd");
+
+        Date date = new Date();
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+
+        String today = format.format(date);
+
+        //현재 날짜가 말일인지 체크
+        if(today.equals(format.format(calendar.getTime()))) {
+            logger.debug("다음달 공휴일 데이터 CALL");
+            insertHolidayData(false);
+        }
     }
 
     /**

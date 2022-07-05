@@ -9,6 +9,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import pms.api.kepcoAmi.service.KepcoAmiService;
 import pms.api.kepcoAmi.service.model.KepcoAmi;
@@ -63,13 +64,16 @@ public class KepcoAmiScheduler {
      **/
     //@Scheduled(cron = "0 1/15 * * * *")
     public void getKepcoAmiData() {
+
+        logger.debug("한전 데이터 Scheduler 실행 ====>");
+
         RestTemplate restTemplate = new RestTemplate();
         final HttpEntity entity = new HttpEntity(new HttpHeaders());
         try {
             /* 고객정보 URL 세팅 */
             String fullMeterUrl = meterUrl + "?serviceKey=" + serviceKey + "&returnType=" + returnType;
             URI meterURI = new URI(fullMeterUrl);
-            System.out.println(fullMeterUrl);
+            logger.debug("fullMeterUrl : " + fullMeterUrl);
             ResponseEntity<String> meterApiResponse = restTemplate.exchange(meterURI, HttpMethod.GET, entity, String.class);
 
             if (meterApiResponse.getStatusCode().equals(HttpStatus.OK)) {
@@ -91,7 +95,7 @@ public class KepcoAmiScheduler {
                     if(amiList.size() > 0 ){
                         String fullCustomerUrl = customerUrl + "?serviceKey=" + serviceKey + "&returnType=" + returnType;
                         URI customerURI = new URI(fullCustomerUrl);
-                        System.out.println(fullCustomerUrl);
+                        logger.debug("fullCustomerUrl : " + fullCustomerUrl);
                         ResponseEntity<String> customerApiResponse = restTemplate.exchange(customerURI, HttpMethod.GET, entity, String.class);
 
                         if (customerApiResponse.getStatusCode().equals(HttpStatus.OK)) {
@@ -142,7 +146,8 @@ public class KepcoAmiScheduler {
                                     logger.debug("요청 한전 API URL :" + useUrl);
                                     ResponseEntity<String> minuteUseApiResponse = restTemplate.exchange(useURI, HttpMethod.GET, entity, String.class);
                                     try {
-                                        System.out.println(minuteUseApiResponse.getBody());
+
+                                        logger.debug("한전 15분 데이터 조회 결과 --> " + minuteUseApiResponse.toString());
                                         JsonObject jsonObject = gson.fromJson(minuteUseApiResponse.getBody(), JsonObject.class);
                                         JsonArray jsonArray = jsonObject.getAsJsonArray("minuteLpDataInfoList");
                                         jsonObject = gson.fromJson(jsonArray.get(0), JsonObject.class);
@@ -176,8 +181,12 @@ public class KepcoAmiScheduler {
         } catch (DataIntegrityViolationException e) {
             logger.error("기존에 등록된 한전 AMI 데이터입니다.");
             logger.error(e.getLocalizedMessage());
+        } catch (HttpServerErrorException e) {
+            logger.error("한전 데이터 수신 실패.");
+            logger.error(e.getLocalizedMessage());
         } catch (Exception e){
-            e.printStackTrace();
+            logger.error("한전 데이터 Exception 발생.");
+            logger.error(e.getLocalizedMessage());
         }
     }
 

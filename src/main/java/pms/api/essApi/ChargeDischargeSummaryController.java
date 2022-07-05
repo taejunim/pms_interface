@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +34,9 @@ import java.util.Map;
 @RequestMapping("/chargeDischargeSummary")
 @Tag(name = "ChargeDischargeSummary", description = "충방전 정보 Summary API")
 public class ChargeDischargeSummaryController {
+
+    //로그 설정
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final ChargeDischargeSummaryService chargeDischargeSummaryService;
 
@@ -126,9 +131,11 @@ public class ChargeDischargeSummaryController {
                 result.put("message", "올바른 충/방전 타입 혹은 ESS 고정형/이동형 여부를 보내주세요.");
             }
         } catch (NullPointerException | NumberFormatException e) {
+            logger.error("ESS 충방전 데이터 - 필수 값 누락 및 등록되지 않은 ESS ID");
             result.put("result", "FAIL");
             result.put("message", "전송하신 데이터를 확인하여 주십시오.");
         } catch (DataIntegrityViolationException e) {
+            logger.error("ESS 충방전 데이터 - 기존에 등록된 데이터");
             result.put("result", "FAIL");
             if (e.getMessage().contains("SQLIntegrityConstraintViolationException"))
                 result.put("message","기존에 존재하는 데이터입니다.");

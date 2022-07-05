@@ -101,6 +101,8 @@ public class WeatherInterfaceScheduler {
     //@Scheduled(cron="0 10 0/1 * * *" )
     public void getWeatherData() throws URISyntaxException, UnsupportedEncodingException {
 
+        logger.debug("날씨 Scheduler 실행 ====>");
+
         RestTemplate restTemplate = new RestTemplate();
         final HttpEntity entity = new HttpEntity(new HttpHeaders());
 
