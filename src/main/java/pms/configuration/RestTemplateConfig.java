@@ -38,9 +38,9 @@ public class RestTemplateConfig {
         factory.setHttpClient(client);
 
         //Connection timeout
-        factory.setConnectTimeout(3000);
+        factory.setConnectTimeout(5000);
         //Read timeout
-        factory.setReadTimeout(5000);
+        factory.setReadTimeout(8000);
 
         RestTemplate restTemplate = new RestTemplate(new BufferingClientHttpRequestFactory(factory));
         restTemplate.setInterceptors(Collections.singletonList(new RequestResponseLoggingInterceptor()));

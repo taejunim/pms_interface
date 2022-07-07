@@ -6,10 +6,12 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import pms.api.holidayInterface.service.HolidayInterfaceService;
 import pms.api.holidayInterface.service.model.HolidayInterface;
@@ -41,6 +43,9 @@ public class HolidayInterfaceScheduler {
     public HolidayInterfaceScheduler(HolidayInterfaceService holidayInterfaceService) {
         HolidayInterfaceScheduler.holidayInterfaceService = holidayInterfaceService;
     }
+
+    @Autowired
+    private static final RestTemplate restTemplate = new RestTemplate();
 
     //data.go.kr 인증키
     private static String serviceKey;
@@ -90,7 +95,7 @@ public class HolidayInterfaceScheduler {
     public static void insertHolidayData(Boolean isFirst) throws URISyntaxException {
 
         Gson gson = new Gson();
-        RestTemplate restTemplate = new RestTemplate();
+
         final HttpEntity entity = new HttpEntity(new HttpHeaders());
 
         String formatDate;
@@ -149,6 +154,9 @@ public class HolidayInterfaceScheduler {
             logger.error("holidayApiResponse - 공휴일 데이터 JsonSyntaxException | ClassCastException");
             logger.error("요청 URI" + apiURl);
             logger.error(holidayApiResponse.toString());
+        } catch (ResourceAccessException e) {
+            logger.error("holidayApiResponse 데이터 호출시 TimeOut 발생");
+            logger.error(e.getLocalizedMessage());
         }
     }
 }

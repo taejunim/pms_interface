@@ -6,10 +6,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import pms.api.weatherInterface.service.model.WeatherInterface;
 import pms.api.weatherInterface.service.WeatherInterfaceService;
@@ -42,6 +44,9 @@ public class WeatherInterfaceScheduler {
     public WeatherInterfaceScheduler(WeatherInterfaceService weatherInterfaceService) {
         this.WeatherInterfaceService = weatherInterfaceService;
     }
+
+    @Autowired
+    private RestTemplate restTemplate = new RestTemplate();
 
     //data.go.kr 인증키
     @Value("${weather.api.serviceKey}")
@@ -103,7 +108,6 @@ public class WeatherInterfaceScheduler {
 
         logger.debug("날씨 Scheduler 실행 ====>");
 
-        RestTemplate restTemplate = new RestTemplate();
         final HttpEntity entity = new HttpEntity(new HttpHeaders());
 
         WeatherInterface weatherInterface = new WeatherInterface();
@@ -175,6 +179,9 @@ public class WeatherInterfaceScheduler {
             logger.error("weatherApiResponse - 초단기 예보 데이터 JsonSyntaxException/ClassCastException/NullPointerException");
             logger.error("요청 URI :" + weatherResponseURI.toString());
             logger.error(weatherApiResponse.toString());
+        } catch (ResourceAccessException e) {
+            logger.error("weatherApiResponse 데이터 호출시 TimeOut 발생");
+            logger.error(e.getLocalizedMessage());
         }
         /* 초단기 예보 데이터 END */
 
@@ -203,6 +210,9 @@ public class WeatherInterfaceScheduler {
             logger.error("sunriseSunsetApiResponse - 일몰 일출 데이터 JsonSyntaxException/ClassCastException/NullPointerException");
             logger.error("요청 URI --> " + sunsetSunriseResponseURI.toString());
             logger.error(sunriseSunsetApiResponse.toString());
+        } catch (ResourceAccessException e) {
+            logger.error("sunriseSunsetApiResponse 데이터 호출시 TimeOut 발생");
+            logger.error(e.getLocalizedMessage());
         }
         /* 일출,일몰 데이터 END */
 
@@ -229,6 +239,9 @@ public class WeatherInterfaceScheduler {
             logger.error("fineDustApiResponse - 미세 먼지 데이터 JsonSyntaxException/ClassCastException");
             logger.error("요청 URL : " + fineDustResponseURI.toString());
             logger.error(fineDustApiResponse.toString());
+        } catch (ResourceAccessException e) {
+            logger.error("fineDustApiResponse 데이터 호출시 TimeOut 발생");
+            logger.error(e.getLocalizedMessage());
         }
         /* 미세 먼지 데이터 END */
         WeatherInterfaceService.insertWeatherData(weatherInterface);

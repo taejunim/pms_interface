@@ -4,12 +4,16 @@ import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.*;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpServerErrorException;
+
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import pms.api.kepcoAmi.service.KepcoAmiService;
 import pms.api.kepcoAmi.service.model.KepcoAmi;
@@ -38,6 +42,8 @@ public class KepcoAmiScheduler {
         this.kepcoAmiService = kepcoAmiService;
     }
 
+    @Autowired
+    private RestTemplate restTemplate = new RestTemplate();
 
     //EDSM 서비스키
     @Value("${edsm.api.serviceKey}")
@@ -67,7 +73,6 @@ public class KepcoAmiScheduler {
 
         logger.debug("한전 데이터 Scheduler 실행 ====>");
 
-        RestTemplate restTemplate = new RestTemplate();
         final HttpEntity entity = new HttpEntity(new HttpHeaders());
         try {
             /* 고객정보 URL 세팅 */
@@ -183,6 +188,9 @@ public class KepcoAmiScheduler {
             logger.error(e.getLocalizedMessage());
         } catch (HttpServerErrorException e) {
             logger.error("한전 데이터 수신 실패.");
+            logger.error(e.getLocalizedMessage());
+        } catch (ResourceAccessException e) {
+            logger.error("한전 데이터 호출시 TimeOut 발생");
             logger.error(e.getLocalizedMessage());
         } catch (Exception e){
             logger.error("한전 데이터 Exception 발생.");
