@@ -23,7 +23,7 @@
 
     <!-- 한전 AMI 15분 데이터 등록 -->
     <insert id="insertAmi15MinuteData" parameterType="KepcoAmi">
-        INSERT INTO tb_kepco_15m(
+        INSERT IGNORE INTO tb_kepco_15m(
                                     metering_date,
                                     hhmm,
                                     ami_idx,
