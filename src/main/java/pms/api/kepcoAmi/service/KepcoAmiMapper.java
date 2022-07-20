@@ -11,26 +11,53 @@ import java.util.List;
 @Repository
 public interface KepcoAmiMapper {
 
+    /**
+     * CEMS와 한전 AMI 비교
+     *
+     * @return
+     */
     List<KepcoAmi> getRegisterAmi(HashMap<String,Object> amiList);
+
+    /**
+     * 소비데이터 등록 안된 고객번호 조회
+     *
+     * @return
+     */
+    List<KepcoAmi>  selectCallApiList();
+
+    /**
+     * 한전 API 응답 결과 테이블 데이터 등록 및 업데이트
+     *
+     * @return
+     */
+    void insertApiResultList(List<KepcoAmi> amiDataList);
+
+    /**
+     * 한전 API 결과 테이블 단건 업데이트
+     *
+     * @return
+     */
+    void updateSingleApiResult(KepcoAmi amiData);
 
     /**
      * 15분 한전 AMI 데이터 등록
      *
      * @return
      */
-    void insertAmi15MinuteData(List<KepcoAmi> amiDataList);
+    int insertAmi15MinuteData(List<KepcoAmi> amiDataList);
 
     /**
      * 한시간 한전 AMI 데이터 등록
      *
      * @return
      */
-    void insertAmiHourData(List<KepcoAmi> amiDataList);
+    int insertAmiHourData(List<KepcoAmi> amiDataList);
 
     /**
      * 하루 한전 AMI 데이터 등록
      *
      * @return
      */
-    void insertAmiDayData(List<KepcoAmi> amiDataList);
+    int insertAmiDayData(List<KepcoAmi> amiDataList);
+
 }

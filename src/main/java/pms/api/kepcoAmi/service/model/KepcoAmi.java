@@ -16,4 +16,6 @@ public class KepcoAmi {
     private String meteringDate;        //검침일자
     private String meteringTime;        //검침시간
 
+    private String dataRequestDt;       //데이터 요청 일자
+    private String requestSuccessDt;    //요청 성공 일자
 }

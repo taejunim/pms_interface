@@ -21,6 +21,52 @@
         AND a.mid = b.meterNo
     </select>
 
+    <!-- 소비 데이터 등록 미완료된 고객 번호 조회 -->
+    <select id="selectCallApiList" parameterType="HashMap" resultType="KepcoAmi">
+        SELECT
+            a.kepco_cstmr_no                                                         custNo,
+            a.ami_idx                                                                amiIdx,
+            a.data_request_dt                                                        dataRequestDt,
+            IF(a.request_success_dt IS NULL,
+               DATE_FORMAT(b.reg_dt,'%Y%m%d'),
+               DATE_FORMAT(DATE_ADD(a.request_success_dt, INTERVAL 1 DAY),'%Y%m%d')) requestSuccessDt
+        FROM tb_kepco_api_result a,
+             tb_cnsmr b
+        WHERE a.kepco_cstmr_no = b.kepco_cstmr_no
+        AND   a.del_yn = 'N'
+        AND ( a.request_success_dt != DATE_FORMAT(DATE_ADD(NOW(),INTERVAL -2 DAY),'%Y%m%d')
+            OR
+              a.request_success_dt IS NULL
+            )
+    </select>
+
+    <!-- 한전 API 응답 결과 등록 -->
+    <insert id="insertApiResultList" parameterType="KepcoAmi">
+        INSERT INTO tb_kepco_api_result(kepco_cstmr_no, ami_idx, data_request_dt, request_success_dt)
+        SELECT * FROM (
+        <foreach collection="list" index="index" item="item" separator="UNION ALL">
+            (
+            SELECT
+                #{item.custNo} AS kepcoCstmrNo,
+                #{item.amiIdx} AS amiIdx,
+                #{item.meteringDate} AS dataRequestDt,
+                #{item.requestSuccessDt} AS requestSuccessDt
+            )
+        </foreach>
+        ) AS A
+        ON DUPLICATE KEY UPDATE
+        data_request_dt = IF(dataRequestDt IS NULL, data_request_dt, dataRequestDt),
+        request_success_dt = IF(requestSuccessDt IS NULL, request_success_dt, requestSuccessDt)
+    </insert>
+
+    <!-- 한전 API 결과 테이블 단건 업데이트 -->
+    <update id="updateSingleApiResult" parameterType="KepcoAmi">
+        UPDATE tb_kepco_api_result
+        SET request_success_dt = #{requestSuccessDt}
+        WHERE kepco_cstmr_no = #{custNo}
+        AND ami_idx = #{amiIdx}
+    </update>
+
     <!-- 한전 AMI 15분 데이터 등록 -->
     <insert id="insertAmi15MinuteData" parameterType="KepcoAmi">
         INSERT IGNORE INTO tb_kepco_15m(
