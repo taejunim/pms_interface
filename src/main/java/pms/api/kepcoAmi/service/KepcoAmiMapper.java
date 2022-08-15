@@ -58,6 +58,26 @@ public interface KepcoAmiMapper {
      *
      * @return
      */
-    int insertAmiDayData(List<KepcoAmi> amiDataList);
+    int insertAmiDayData(KepcoAmi amiDataList);
+
+    /**
+     * 15분 한전 AMI 에러 데이터 등록
+     *
+     * @return
+     */
+    int insertAmi15MinuteErrorData(List<KepcoAmi> amiDataList);
+    /**
+     * 한전 AMI 15분 누적 데이터 교정(00시 15분 ~ 45분)
+     *
+     * @return
+     */
+    void updateCorrectDayStartAccmltMeteringVal(HashMap<String,Object> ami);
+
+    /**
+     * 한전 AMI 15분 누적 데이터 교정(00시 00분)
+     *
+     * @return
+     */
+    void updateCorrectDayLastAccmltMeteringVal(HashMap<String,Object> ami);
 
 }

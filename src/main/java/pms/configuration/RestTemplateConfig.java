@@ -30,7 +30,7 @@ public class RestTemplateConfig {
 
         HttpClient client = HttpClientBuilder.create()
                 //최대 오픈되는 연결 수
-                .setMaxConnTotal(20)
+                .setMaxConnTotal(100)
                 // IP, 포트 번호 1쌍에 가능한 연결 수
                 .setMaxConnPerRoute(10)
                 .build();

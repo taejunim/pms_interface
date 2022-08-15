@@ -22,6 +22,6 @@ public class PmsInterfaceApplication {
     //어플리케이션 준비 완료 후 해당 월의 공휴일 데이터를 갱신
     @EventListener(ApplicationReadyEvent.class)
     public void init() throws URISyntaxException {
-        HolidayInterfaceScheduler.insertHolidayData(true);
+        //HolidayInterfaceScheduler.insertHolidayData(true);
     }
 }

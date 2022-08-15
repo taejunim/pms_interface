@@ -18,4 +18,6 @@ public class KepcoAmi {
 
     private String dataRequestDt;       //데이터 요청 일자
     private String requestSuccessDt;    //요청 성공 일자
+    private String apiCallResult;       //API 호출 결과 - 성공 : 1 실패 : 0
+    private String errorResponseMsg;    //응답 이상시 API 메세지
 }

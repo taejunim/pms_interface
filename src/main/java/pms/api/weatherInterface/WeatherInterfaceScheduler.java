@@ -103,7 +103,7 @@ public class WeatherInterfaceScheduler {
      * 매 시간 10분에 날씨 관련 API 호출 하여 응답값 DB에 저장
      * 실제 반영 시에는 주석을 해제하여 반영
      **/
-    //@Scheduled(cron="0 10 0/1 * * *" )
+    //@Scheduled(cron="0 50 0/1 * * *" )
     public void getWeatherData() throws URISyntaxException, UnsupportedEncodingException {
 
         logger.debug("날씨 Scheduler 실행 ====>");
@@ -181,6 +181,8 @@ public class WeatherInterfaceScheduler {
             logger.error(weatherApiResponse.toString());
         } catch (ResourceAccessException e) {
             logger.error("weatherApiResponse 데이터 호출시 TimeOut 발생");
+            logger.error(e.getLocalizedMessage());
+        } catch (Exception e) {
             logger.error(e.getLocalizedMessage());
         }
         /* 초단기 예보 데이터 END */

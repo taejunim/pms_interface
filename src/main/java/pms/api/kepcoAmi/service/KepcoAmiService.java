@@ -2,7 +2,6 @@ package pms.api.kepcoAmi.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import pms.api.holidayInterface.HolidayInterfaceScheduler;
 import pms.api.kepcoAmi.service.model.KepcoAmi;
@@ -55,13 +54,59 @@ public class KepcoAmiService {
      *
      * @return
      */
-    public void insertAmiData(List<KepcoAmi> amiDataList) {
+    public void insertAmiData(List<KepcoAmi> amiDataList, Boolean errorExist) {
 
-        int resultMinute = kepcoAmiMapper.insertAmi15MinuteData(amiDataList);
-        int resultHour   = kepcoAmiMapper.insertAmiHourData(amiDataList);
-        int resultDay    = kepcoAmiMapper.insertAmiDayData(amiDataList);
+        try {
+            //15분 데이터 등록
+            int resultMinute = kepcoAmiMapper.insertAmi15MinuteData(amiDataList);
+            //한시간 데이터 등록
+            int resultHour = kepcoAmiMapper.insertAmiHourData(amiDataList);
+            //하루 데이터 등록
+            int resultDay = kepcoAmiMapper.insertAmiDayData(amiDataList.get(0));
 
-        if(resultMinute * resultHour * resultDay > 0) kepcoAmiMapper.updateSingleApiResult(amiDataList.get(0));
+            //0015 ~ 0045까지 누적값 데이터 보정
+            for (int i = 0; i < 3; i++) {
+                HashMap<String, Object> data = new HashMap<>();
+                data.put("amiIdx", amiDataList.get(i).getAmiIdx());
+                data.put("meteringDate", amiDataList.get(i).getMeteringDate());
+                data.put("meteringTime", amiDataList.get(i).getMeteringTime());
+                if (i == 0) data.put("previousTime", "0000");
+                else data.put("previousTime", amiDataList.get(i - 1).getMeteringTime());
+
+                kepcoAmiMapper.updateCorrectDayStartAccmltMeteringVal(data);
+            }
+
+            if (amiDataList.get(95).getAccmltMeteringVal().equals("")) {
+                HashMap<String, Object> data = new HashMap<>();
+                data.put("amiIdx", amiDataList.get(95).getAmiIdx());
+                data.put("meteringDate", amiDataList.get(95).getMeteringDate());
+                data.put("meteringTime", amiDataList.get(95).getMeteringTime());
+                data.put("previousDate", amiDataList.get(94).getMeteringDate());
+                kepcoAmiMapper.updateCorrectDayLastAccmltMeteringVal(data);
+            }
+
+            if (resultMinute * resultHour * resultDay > 0 && !errorExist)
+                kepcoAmiMapper.updateSingleApiResult(amiDataList.get(0));
+        } catch (Exception e) {
+            logger.error("insertAmiData Exception 발생");
+            logger.error(e.getMessage());
+            logger.error(e.getLocalizedMessage());
+        }
+    }
+
+    /**
+     * 한전 AMI 에러 데이터 등록
+     *
+     * @return
+     */
+    public void insertAmiErrorData(List<KepcoAmi> amiDataList) {
+        try {
+            int resultMinute = kepcoAmiMapper.insertAmi15MinuteErrorData(amiDataList);
+        } catch (Exception e) {
+            logger.error("insertAmiErrorData Exception 발생");
+            logger.error(e.getMessage());
+            logger.error(e.getLocalizedMessage());
+        }
     }
 
     /**
