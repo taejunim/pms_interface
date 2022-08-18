@@ -103,7 +103,7 @@ public class WeatherInterfaceScheduler {
      * 매 시간 10분에 날씨 관련 API 호출 하여 응답값 DB에 저장
      * 실제 반영 시에는 주석을 해제하여 반영
      **/
-    //@Scheduled(cron="0 50 0/1 * * *" )
+    //@Scheduled(cron="0 10 0/1 * * *" )
     public void getWeatherData() throws URISyntaxException, UnsupportedEncodingException {
 
         logger.debug("날씨 Scheduler 실행 ====>");
@@ -111,25 +111,28 @@ public class WeatherInterfaceScheduler {
         final HttpEntity entity = new HttpEntity(new HttpHeaders());
 
         WeatherInterface weatherInterface = new WeatherInterface();
+
+        // 포맷 정의
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH");
+        Date date = new Date();
+
+        //서버 에러 발생시, 측정일과 측정시간은 담아주기 위함.
+        String fcstDate = format.format(date);
+        String fcstTime = timeFormat.format(date) + "00";
+        weatherInterface.setNx(Integer.parseInt(nx));
+        weatherInterface.setNy(Integer.parseInt(ny));
+        weatherInterface.setBaseDate(fcstDate);
+        weatherInterface.setBaseTime(fcstTime);
+
         /* 초단기 예보 데이터 START */
         URI weatherResponseURI = new URI(makeFullURI(weatherForecastApiUrl));
-
-        ResponseEntity<String> weatherApiResponse = restTemplate.exchange(weatherResponseURI, HttpMethod.GET, entity, String.class);
+        //예외 발생시 로그 찍는용.
+        String responseMessage = "";
 
         try {
-            // 포맷 정의
-            SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
-            SimpleDateFormat timeFormat = new SimpleDateFormat("HH");
-            Date date = new Date();
-
-            //서버 에러 발생시, 측정일과 측정시간은 담아주기 위함.
-            String fcstDate = format.format(date);
-            String fcstTime = timeFormat.format(date) + "00";
-            weatherInterface.setNx(Integer.parseInt(nx));
-            weatherInterface.setNy(Integer.parseInt(ny));
-            weatherInterface.setBaseDate(fcstDate);
-            weatherInterface.setBaseTime(fcstTime);
-
+            ResponseEntity<String> weatherApiResponse = restTemplate.exchange(weatherResponseURI, HttpMethod.GET, entity, String.class);
+            responseMessage = weatherApiResponse.toString();
             logger.debug("weatherApiResponse : " +  weatherApiResponse);
 
             if(!Objects.requireNonNull(weatherApiResponse.getBody()).contains("html")) {
@@ -178,21 +181,21 @@ public class WeatherInterfaceScheduler {
         } catch (NullPointerException | JsonSyntaxException | ClassCastException e) {
             logger.error("weatherApiResponse - 초단기 예보 데이터 JsonSyntaxException/ClassCastException/NullPointerException");
             logger.error("요청 URI :" + weatherResponseURI.toString());
-            logger.error(weatherApiResponse.toString());
+            logger.error(responseMessage);
         } catch (ResourceAccessException e) {
             logger.error("weatherApiResponse 데이터 호출시 TimeOut 발생");
             logger.error(e.getLocalizedMessage());
         } catch (Exception e) {
+            logger.error("weatherApiResponse 데이터 호출시 Exception 발생");
             logger.error(e.getLocalizedMessage());
         }
         /* 초단기 예보 데이터 END */
 
         /* 일출,일몰 데이터 START */
         URI sunsetSunriseResponseURI = new URI(makeFullURI(sunriseSunsetApiUrl));
-
-        ResponseEntity<String> sunriseSunsetApiResponse = restTemplate.exchange(sunsetSunriseResponseURI, HttpMethod.GET, entity, String.class);
         try {
-
+            ResponseEntity<String> sunriseSunsetApiResponse = restTemplate.exchange(sunsetSunriseResponseURI, HttpMethod.GET, entity, String.class);
+            responseMessage = sunriseSunsetApiResponse.toString();
             logger.debug("sunriseSunsetApiResponse : " +  sunriseSunsetApiResponse);
 
             if(!Objects.requireNonNull(sunriseSunsetApiResponse.getBody()).contains("html")) {
@@ -211,20 +214,21 @@ public class WeatherInterfaceScheduler {
         } catch (NullPointerException | JsonSyntaxException | ClassCastException e) {
             logger.error("sunriseSunsetApiResponse - 일몰 일출 데이터 JsonSyntaxException/ClassCastException/NullPointerException");
             logger.error("요청 URI --> " + sunsetSunriseResponseURI.toString());
-            logger.error(sunriseSunsetApiResponse.toString());
+            logger.error(responseMessage);
         } catch (ResourceAccessException e) {
             logger.error("sunriseSunsetApiResponse 데이터 호출시 TimeOut 발생");
+            logger.error(e.getLocalizedMessage());
+        } catch (Exception e) {
+            logger.error("sunriseSunsetApiResponse 데이터 호출시 Exception 발생");
             logger.error(e.getLocalizedMessage());
         }
         /* 일출,일몰 데이터 END */
 
         /* 미세 먼지 데이터 START */
         URI fineDustResponseURI = new URI(makeFullURI(fineDustApiUrl));
-
-        ResponseEntity<String> fineDustApiResponse = restTemplate.exchange(fineDustResponseURI, HttpMethod.GET, entity, String.class);
-
         try {
-
+            ResponseEntity<String> fineDustApiResponse = restTemplate.exchange(fineDustResponseURI, HttpMethod.GET, entity, String.class);
+            responseMessage = fineDustApiResponse.toString();
             logger.debug("fineDustApiResponse : " +  fineDustApiResponse);
 
             if(!Objects.requireNonNull(fineDustApiResponse.getBody()).contains("html")) {
@@ -240,9 +244,12 @@ public class WeatherInterfaceScheduler {
         } catch (NullPointerException | JsonSyntaxException | ClassCastException e) {
             logger.error("fineDustApiResponse - 미세 먼지 데이터 JsonSyntaxException/ClassCastException");
             logger.error("요청 URL : " + fineDustResponseURI.toString());
-            logger.error(fineDustApiResponse.toString());
+            logger.error(responseMessage);
         } catch (ResourceAccessException e) {
             logger.error("fineDustApiResponse 데이터 호출시 TimeOut 발생");
+            logger.error(e.getLocalizedMessage());
+        } catch (Exception e) {
+            logger.error("fineDustApiResponse 데이터 호출시 Exception 발생");
             logger.error(e.getLocalizedMessage());
         }
         /* 미세 먼지 데이터 END */
