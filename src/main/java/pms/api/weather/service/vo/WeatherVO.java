@@ -1,10 +1,10 @@
-package pms.api.weatherInterface.service.model;
+package pms.api.weather.service.vo;
 
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * WeatherInterface.java
+ * WeatherVO.java
  *
  * ESS 정보
  *
@@ -13,7 +13,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class WeatherInterface {
+public class WeatherVO {
 
     private String regDt;       //등록일자
     private String baseDate;    //예보일자

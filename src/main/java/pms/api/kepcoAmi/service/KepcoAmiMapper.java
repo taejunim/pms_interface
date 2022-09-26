@@ -2,10 +2,18 @@ package pms.api.kepcoAmi.service;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
-import pms.api.kepcoAmi.service.model.KepcoAmi;
+import pms.api.kepcoAmi.service.vo.KepcoAmiVO;
 
 import java.util.HashMap;
 import java.util.List;
+
+/**
+ * KepcoAmiMapper.java
+ *
+ * 한전 AMI 사용량 정보 Mapper
+ *
+ * Created by Youyeong Jo on 2022/06/14.
+ */
 
 @Mapper
 @Repository
@@ -16,56 +24,57 @@ public interface KepcoAmiMapper {
      *
      * @return
      */
-    List<KepcoAmi> getRegisterAmi(HashMap<String,Object> amiList);
+    List<KepcoAmiVO> getRegisterAmi(HashMap<String,Object> amiList);
 
     /**
      * 소비데이터 등록 안된 고객번호 조회
      *
      * @return
      */
-    List<KepcoAmi>  selectCallApiList();
+    List<KepcoAmiVO>  selectCallApiList();
 
     /**
      * 한전 API 응답 결과 테이블 데이터 등록 및 업데이트
      *
      * @return
      */
-    void insertApiResultList(List<KepcoAmi> amiDataList);
+    void insertApiResultList(List<KepcoAmiVO> amiDataList);
 
     /**
      * 한전 API 결과 테이블 단건 업데이트
      *
      * @return
      */
-    void updateSingleApiResult(KepcoAmi amiData);
+    void updateSingleApiResult(KepcoAmiVO amiData);
 
     /**
      * 15분 한전 AMI 데이터 등록
      *
      * @return
      */
-    int insertAmi15MinuteData(List<KepcoAmi> amiDataList);
+    int insertAmi15MinuteData(List<KepcoAmiVO> amiDataList);
 
     /**
      * 한시간 한전 AMI 데이터 등록
      *
      * @return
      */
-    int insertAmiHourData(List<KepcoAmi> amiDataList);
+    int insertAmiHourData(List<KepcoAmiVO> amiDataList);
 
     /**
      * 하루 한전 AMI 데이터 등록
      *
      * @return
      */
-    int insertAmiDayData(KepcoAmi amiDataList);
+    int insertAmiDayData(KepcoAmiVO amiDataList);
 
     /**
      * 15분 한전 AMI 에러 데이터 등록
      *
      * @return
      */
-    int insertAmi15MinuteErrorData(List<KepcoAmi> amiDataList);
+    int insertAmi15MinuteErrorData(List<KepcoAmiVO> amiDataList);
+
     /**
      * 한전 AMI 15분 누적 데이터 교정(00시 15분 ~ 45분)
      *
@@ -74,10 +83,24 @@ public interface KepcoAmiMapper {
     void updateCorrectDayStartAccmltMeteringVal(HashMap<String,Object> ami);
 
     /**
-     * 한전 AMI 15분 누적 데이터 교정(00시 00분)
+     * 15분 한전 AMI 누적 데이터 등록 (고압)
      *
      * @return
      */
-    void updateCorrectDayLastAccmltMeteringVal(HashMap<String,Object> ami);
+    int insertHighAmi15MinuteAccmltData(KepcoAmiVO ami);
+
+    /**
+     * 한시간 한전 AMI 데이터 등록 (고압)
+     *
+     * @return
+     */
+    int insertHighAmiHourData(KepcoAmiVO ami);
+
+    /**
+     * 하루 한전 AMI 데이터 등록(고압)
+     *
+     * @return
+     */
+    int insertHighAmiDayData(KepcoAmiVO ami);
 
 }

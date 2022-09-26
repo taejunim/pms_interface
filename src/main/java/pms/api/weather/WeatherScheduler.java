@@ -1,4 +1,4 @@
-package pms.api.weatherInterface;
+package pms.api.weather;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -13,8 +13,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
-import pms.api.weatherInterface.service.model.WeatherInterface;
-import pms.api.weatherInterface.service.WeatherInterfaceService;
+import pms.api.weather.service.vo.WeatherVO;
+import pms.api.weather.service.WeatherService;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -26,7 +26,7 @@ import java.util.Date;
 import java.util.Objects;
 
 /**
- * WeatherInterfaceScheduler.java
+ * WeatherScheduler.java
  *
  * 날씨 정보 Scheduler
  *
@@ -34,15 +34,15 @@ import java.util.Objects;
  */
 
 @Component
-public class WeatherInterfaceScheduler {
+public class WeatherScheduler {
 
     //로그 설정
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private final WeatherInterfaceService WeatherInterfaceService;
+    private final WeatherService WeatherService;
 
-    public WeatherInterfaceScheduler(WeatherInterfaceService weatherInterfaceService) {
-        this.WeatherInterfaceService = weatherInterfaceService;
+    public WeatherScheduler(WeatherService weatherService) {
+        this.WeatherService = weatherService;
     }
 
     @Autowired
@@ -103,14 +103,14 @@ public class WeatherInterfaceScheduler {
      * 매 시간 10분에 날씨 관련 API 호출 하여 응답값 DB에 저장
      * 실제 반영 시에는 주석을 해제하여 반영
      **/
-    //@Scheduled(cron="0 10 0/1 * * *" )
+    @Scheduled(cron="0 10 0/1 * * *" )
     public void getWeatherData() throws URISyntaxException, UnsupportedEncodingException {
 
         logger.debug("날씨 Scheduler 실행 ====>");
 
         final HttpEntity entity = new HttpEntity(new HttpHeaders());
 
-        WeatherInterface weatherInterface = new WeatherInterface();
+        WeatherVO weatherVO = new WeatherVO();
 
         // 포맷 정의
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
@@ -120,10 +120,10 @@ public class WeatherInterfaceScheduler {
         //서버 에러 발생시, 측정일과 측정시간은 담아주기 위함.
         String fcstDate = format.format(date);
         String fcstTime = timeFormat.format(date) + "00";
-        weatherInterface.setNx(Integer.parseInt(nx));
-        weatherInterface.setNy(Integer.parseInt(ny));
-        weatherInterface.setBaseDate(fcstDate);
-        weatherInterface.setBaseTime(fcstTime);
+        weatherVO.setNx(Integer.parseInt(nx));
+        weatherVO.setNy(Integer.parseInt(ny));
+        weatherVO.setBaseDate(fcstDate);
+        weatherVO.setBaseTime(fcstTime);
 
         /* 초단기 예보 데이터 START */
         URI weatherResponseURI = new URI(makeFullURI(weatherForecastApiUrl));
@@ -157,19 +157,19 @@ public class WeatherInterfaceScheduler {
 
                             switch (category) {
                                 case "T1H":
-                                    weatherInterface.setTemp(indexItem.get("fcstValue").getAsInt());
+                                    weatherVO.setTemp(indexItem.get("fcstValue").getAsInt());
                                     break;
                                 case "SKY":
-                                    weatherInterface.setSky(Integer.parseInt(indexItem.get("fcstValue").toString().replace("\"", "")));
+                                    weatherVO.setSky(Integer.parseInt(indexItem.get("fcstValue").toString().replace("\"", "")));
                                     break;
                                 case "REH":
-                                    weatherInterface.setReh(indexItem.get("fcstValue").getAsString());
+                                    weatherVO.setReh(indexItem.get("fcstValue").getAsString());
                                     break;
                                 case "PCP":
-                                    weatherInterface.setRn1(Integer.parseInt(indexItem.get("fcstValue").toString().replace("\"", "")));
+                                    weatherVO.setRn1(Integer.parseInt(indexItem.get("fcstValue").toString().replace("\"", "")));
                                     break;
                                 case "WSD":
-                                    weatherInterface.setWsd(indexItem.get("fcstValue").toString().replace("\"", ""));
+                                    weatherVO.setWsd(indexItem.get("fcstValue").toString().replace("\"", ""));
                                     break;
                                 default:
                                     break;
@@ -206,8 +206,8 @@ public class WeatherInterfaceScheduler {
                         JsonObject item = items.getAsJsonObject("item");
                         String sunrise = item.get("sunrise").toString();
                         String sunset = item.get("sunset").toString();
-                        weatherInterface.setSunrise(sunrise.substring(1, 3) + ":" + sunrise.substring(3, 5));
-                        weatherInterface.setSunset(sunset.substring(1, 3) + ":" + sunset.substring(3, 5));
+                        weatherVO.setSunrise(sunrise.substring(1, 3) + ":" + sunrise.substring(3, 5));
+                        weatherVO.setSunset(sunset.substring(1, 3) + ":" + sunset.substring(3, 5));
                     }
                 }
             }
@@ -237,7 +237,7 @@ public class WeatherInterfaceScheduler {
                     JsonArray items = (JsonArray) fineDustResult.get("items");
                     if (items.size() > 0) {
                         JsonObject item = (JsonObject) items.get(0);
-                        weatherInterface.setPm10(item.get("pm10Flag").isJsonNull() ? item.get("pm10Value").toString().replace("\"", "") : "");
+                        weatherVO.setPm10(item.get("pm10Flag").isJsonNull() ? item.get("pm10Value").toString().replace("\"", "") : "");
                     }
                 }
             }
@@ -253,7 +253,7 @@ public class WeatherInterfaceScheduler {
             logger.error(e.getLocalizedMessage());
         }
         /* 미세 먼지 데이터 END */
-        WeatherInterfaceService.insertWeatherData(weatherInterface);
+        WeatherService.insertWeatherData(weatherVO);
     }
 
     /**

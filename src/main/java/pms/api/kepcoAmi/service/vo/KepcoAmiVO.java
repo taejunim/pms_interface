@@ -1,10 +1,18 @@
-package pms.api.kepcoAmi.service.model;
+package pms.api.kepcoAmi.service.vo;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
+/**
+ * KepcoAmiVO.java
+ *
+ * 한전 AMI 사용량 정보 VO
+ *
+ * Created by Youyeong Jo on 2022/06/14.
+ */
+
 @Data
-public class KepcoAmi {
+public class KepcoAmiVO {
 
     private String custNo;              //한전고객번호
     private String meterNo;             //계기번호 (mid)
@@ -20,4 +28,6 @@ public class KepcoAmi {
     private String requestSuccessDt;    //요청 성공 일자
     private String apiCallResult;       //API 호출 결과 - 성공 : 1 실패 : 0
     private String errorResponseMsg;    //응답 이상시 API 메세지
+
+    private String nextDate;            //다음 날짜
 }

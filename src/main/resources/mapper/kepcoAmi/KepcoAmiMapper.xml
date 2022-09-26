@@ -3,7 +3,7 @@
 
 <mapper namespace="pms.api.kepcoAmi.service.KepcoAmiMapper">
     <!-- EDSM에 등록된 AMI중, DB에도 저장된 값 찾기 -->
-    <select id="getRegisterAmi" parameterType="HashMap" resultType="KepcoAmi">
+    <select id="getRegisterAmi" parameterType="HashMap" resultType="KepcoAmiVO">
         SELECT a.ami_idx amiIdx,
                a.mid     meterNo,
                b.custNo  custNo
@@ -22,7 +22,7 @@
     </select>
 
     <!-- 소비 데이터 등록 미완료된 고객 번호 조회 -->
-    <select id="selectCallApiList" parameterType="HashMap" resultType="KepcoAmi">
+    <select id="selectCallApiList" parameterType="HashMap" resultType="KepcoAmiVO">
         SELECT
             a.kepco_cstmr_no                                                         custNo,
             a.ami_idx                                                                amiIdx,
@@ -34,14 +34,14 @@
              tb_cnsmr b
         WHERE a.kepco_cstmr_no = b.kepco_cstmr_no
         AND   a.del_yn = 'N'
-        AND ( a.request_success_dt != DATE_FORMAT(DATE_ADD(NOW(),INTERVAL -2 DAY),'%Y%m%d')
+        AND (  a.request_success_dt != a.data_request_dt
             OR
               a.request_success_dt IS NULL
             )
     </select>
 
     <!-- 한전 API 응답 결과 등록 -->
-    <insert id="insertApiResultList" parameterType="KepcoAmi">
+    <insert id="insertApiResultList" parameterType="KepcoAmiVO">
         INSERT INTO tb_kepco_api_result(kepco_cstmr_no, ami_idx, data_request_dt, request_success_dt)
         SELECT * FROM (
         <foreach collection="list" index="index" item="item" separator="UNION ALL">
@@ -60,7 +60,7 @@
     </insert>
 
     <!-- 한전 API 결과 테이블 단건 업데이트 -->
-    <update id="updateSingleApiResult" parameterType="KepcoAmi">
+    <update id="updateSingleApiResult" parameterType="KepcoAmiVO">
         UPDATE tb_kepco_api_result
         SET request_success_dt = #{requestSuccessDt}
         WHERE kepco_cstmr_no = #{custNo}
@@ -68,7 +68,7 @@
     </update>
 
     <!-- 한전 AMI 15분 데이터 등록 -->
-    <insert id="insertAmi15MinuteData" parameterType="KepcoAmi">
+    <insert id="insertAmi15MinuteData" parameterType="KepcoAmiVO">
         INSERT INTO tb_kepco_15m(
                                     metering_date,
                                     hhmm,
@@ -147,7 +147,7 @@
     </insert>
 
     <!-- 한전 AMI 한시간 데이터 등록 -->
-    <insert id="insertAmiHourData" parameterType="KepcoAmi">
+    <insert id="insertAmiHourData" parameterType="KepcoAmiVO">
         INSERT INTO tb_kepco_hour(
                 metering_date,
                 hh,
@@ -209,7 +209,7 @@
     </insert>
 
     <!-- 한전 AMI 하루 데이터 등록 -->
-    <insert id="insertAmiDayData" parameterType="KepcoAmi">
+    <insert id="insertAmiDayData" parameterType="KepcoAmiVO">
         INSERT INTO tb_kepco_day(
         metering_date,
         ami_idx,
@@ -244,7 +244,7 @@
         accmlt_metering_val = accmltMeteringVal
     </insert>
     <!-- 한전 AMI 15분 에러 데이터 등록 -->
-    <insert id="insertAmi15MinuteErrorData" parameterType="KepcoAmi">
+    <insert id="insertAmi15MinuteErrorData" parameterType="KepcoAmiVO">
         INSERT INTO tb_kepco_15m(
         metering_date,
         hhmm,
@@ -293,7 +293,7 @@
     <update id="updateCorrectDayStartAccmltMeteringVal" parameterType="HashMap">
         UPDATE tb_kepco_15m
         SET accmlt_metering_val  = (
-            SELECT a.accmlt_metering_val + b.metering_val
+            SELECT a.accmlt_metering_val + IFNULL(b.metering_val, 0)
             FROM
             (
                 SELECT accmlt_metering_val
@@ -317,23 +317,136 @@
           AND hhmm          = #{meteringTime}
     </update>
 
-    <!-- 한전 AMI 15분 누적 데이터 교정(00시 00분) -->
-    <update id="updateCorrectDayLastAccmltMeteringVal" parameterType="HashMap">
-        UPDATE tb_kepco_15m
-        SET    accmlt_metering_val = (
-            SELECT accmlt_metering_val
-            FROM
-             ( SELECT accmlt_metering_val
-               FROM tb_kepco_15m
-               WHERE ami_idx        = #{amiIdx}
-               AND use_type         = '1'
-               AND metering_date    = #{previousDate}
-               AND hhmm             = '2345'
+    <!-- 한전 AMI 15분 누적 데이터 등록 (고압용) -->
+    <insert id="insertHighAmi15MinuteAccmltData" parameterType="KepcoAmiVO">
+        INSERT INTO tb_kepco_15m(metering_date, hhmm, mid, use_type, ami_idx, accmlt_metering_val)
+        SELECT * FROM (
+            SELECT  LEFT(date, 8)
+                  , MID(date, 9, 4)
+                  , #{meterNo}
+                  , '1'
+                  , #{amiIdx}
+                  , (
+                    SELECT SUM(metering_val) accmltMeteringVal
+                           FROM tb_kepco_15m
+                           WHERE 1        = 1
+                           AND   use_type = '1'
+                           AND   ami_idx  = #{amiIdx}
+                           AND   mid      = #{meterNo}
+                           AND   CONCAT(metering_date, hhmm)  <![CDATA[ <= ]]> a.date
+                    ) accmltMeteringVal
+            FROM (
+                SELECT  metering_val
+                      , CONCAT(metering_date, hhmm) date
+                      , hhmm
+                FROM tb_kepco_15m
+                WHERE 1 = 1
+                AND   use_type       = '1'
+                AND   ami_idx        = #{amiIdx}
+                AND   mid            = #{meterNo}
+                AND   (metering_date = #{meteringDate} OR metering_date = #{nextDate})
+                AND   CONCAT(metering_date, hhmm)  <![CDATA[ > ]]> CONCAT(#{meteringDate}, '0000')
+                AND   CONCAT(metering_date, hhmm)  <![CDATA[ < ]]> CONCAT(#{nextDate}, '0015')
             ) a
-        )
-        WHERE ami_idx     = #{amiIdx}
-        AND use_type      = '1'
-        AND metering_date = #{meteringDate}
-        AND hhmm          = #{meteringTime}
-    </update>
+        ) result
+        ON DUPLICATE KEY UPDATE
+        accmlt_metering_val = accmltMeteringVal
+
+    </insert>
+
+    <!-- 한전 AMI 한시간 데이터 등록 (고압용)-->
+    <insert id="insertHighAmiHourData" parameterType="KepcoAmiVO">
+        INSERT INTO tb_kepco_hour(
+            metering_date,
+            hh,
+            ami_idx,
+            use_type,
+            mid,
+            kepco_cstmr_no,
+            metering_val,
+            accmlt_metering_val
+            )
+        SELECT *
+        FROM (
+            SELECT    #{meteringDate}
+                    , a.hh
+                    , #{amiIdx}
+                    , '1'
+                    , #{meterNo}
+                    , #{custNo}
+                    , a.meteringVal meteringVal
+                    , (
+                    SELECT SUM(metering_val) accmltMeteringVal
+                    FROM tb_kepco_15m
+                    WHERE 1         = 1
+                    AND   use_type  = '1'
+                    AND   ami_idx   = #{amiIdx}
+                    AND   mid       = #{meterNo}
+                    AND   CONCAT(metering_date, hhmm) <![CDATA[ <= ]]> LEFT(a.date, 12)
+                    )  accmltMeteringVal
+            FROM (
+                SELECT  LEFT(hhmm, 2)      hh
+                       , MAX(date)         date
+                       , SUM(metering_val) meteringVal
+                FROM (
+                    SELECT metering_val,
+                           CONCAT(metering_date, hhmm, '00') date,
+                           hhmm
+                    FROM tb_kepco_15m
+                    WHERE 1 = 1
+                    AND use_type = '1'
+                    AND ami_idx  = #{amiIdx}
+                    AND mid      = #{meterNo}
+                    AND (metering_date = #{meteringDate} OR metering_date = #{nextDate})
+                    AND CONCAT(metering_date, hhmm) <![CDATA[ > ]]> CONCAT(#{meteringDate},'0000')
+                    AND CONCAT(metering_date, hhmm) <![CDATA[ < ]]> CONCAT(#{nextDate}, '0015')
+                ) b
+                GROUP BY DATE_FORMAT(DATE_ADD(DATE_FORMAT(date, '%Y%m%d%H%i%s'), INTERVAL -15 MINUTE), '%H')
+            ) a
+        ) result
+        ON DUPLICATE KEY UPDATE
+          metering_val          = meteringVal
+        , accmlt_metering_val   = accmltMeteringVal
+
+    </insert>
+    <!-- 한전 AMI 하루 데이터 등록(고압) -->
+    <insert id="insertHighAmiDayData" parameterType="KepcoAmiVO">
+        INSERT INTO tb_kepco_day(
+            metering_date
+          , mid
+          , use_type
+          , ami_idx
+          , kepco_cstmr_no
+          , metering_val
+          , accmlt_metering_val
+          )
+        SELECT *
+        FROM (
+            SELECT
+                #{meteringDate},
+                #{meterNo},
+                '1',
+                #{amiIdx},
+                #{custNo},
+                (
+                  SELECT SUM(metering_val)
+                  FROM tb_kepco_hour
+                  WHERE use_type    = '1'
+                  AND ami_idx       =  #{amiIdx}
+                  AND mid           = #{meterNo}
+                  AND metering_date = #{meteringDate}
+                ) meteringVal,
+                (
+                  SELECT SUM(metering_val)
+                  FROM tb_kepco_hour
+                  WHERE use_type    = '1'
+                  AND ami_idx       =  #{amiIdx}
+                  AND mid           = #{meterNo}
+                  AND metering_date <![CDATA[ <= ]]> #{meteringDate}
+                ) accmltMeteringVal
+            ) result
+        ON DUPLICATE KEY UPDATE
+          metering_val        = meteringVal
+        , accmlt_metering_val = accmltMeteringVal
+    </insert>
 </mapper>

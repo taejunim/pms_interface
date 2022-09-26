@@ -3,17 +3,25 @@ package pms.api.kepcoAmi.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import pms.api.holidayInterface.HolidayInterfaceScheduler;
-import pms.api.kepcoAmi.service.model.KepcoAmi;
+import pms.api.holiday.HolidayScheduler;
+import pms.api.kepcoAmi.service.vo.KepcoAmiVO;
 
 import java.util.HashMap;
 import java.util.List;
+
+/**
+ * KepcoAmiService.java
+
+ * 한전 AMI 사용량 정보 Service
+ *
+ * Created by Youyeong Jo on 2022/06/14.
+ */
 
 @Service
 public class KepcoAmiService {
 
     //로그 설정
-    private static final Logger logger = LoggerFactory.getLogger(HolidayInterfaceScheduler.class);
+    private static final Logger logger = LoggerFactory.getLogger(HolidayScheduler.class);
 
     private final KepcoAmiMapper kepcoAmiMapper;
 
@@ -27,7 +35,7 @@ public class KepcoAmiService {
      *
      * @return
      */
-    public List<KepcoAmi> selectCallApiList() {
+    public List<KepcoAmiVO> selectCallApiList() {
         return kepcoAmiMapper.selectCallApiList();
     }
 
@@ -36,7 +44,7 @@ public class KepcoAmiService {
      *
      * @return
      */
-    public List<KepcoAmi> getRegisterAmi(HashMap<String,Object> amiList) {
+    public List<KepcoAmiVO> getRegisterAmi(HashMap<String,Object> amiList) {
         return kepcoAmiMapper.getRegisterAmi(amiList);
     }
 
@@ -45,7 +53,7 @@ public class KepcoAmiService {
      *
      * @return
      */
-    public void insertApiResultList(List<KepcoAmi> amiDataList) {
+    public void insertApiResultList(List<KepcoAmiVO> amiDataList) {
         kepcoAmiMapper.insertApiResultList(amiDataList);
     }
 
@@ -54,15 +62,26 @@ public class KepcoAmiService {
      *
      * @return
      */
-    public void insertAmiData(List<KepcoAmi> amiDataList, Boolean errorExist) {
+    public void insertAmiData(List<KepcoAmiVO> amiDataList, Boolean errorExist) {
 
         try {
             //15분 데이터 등록
             int resultMinute = kepcoAmiMapper.insertAmi15MinuteData(amiDataList);
             //한시간 데이터 등록
-            int resultHour = kepcoAmiMapper.insertAmiHourData(amiDataList);
-            //하루 데이터 등록
-            int resultDay = kepcoAmiMapper.insertAmiDayData(amiDataList.get(0));
+            int resultHour = 0;
+            int resultDay  = 0;
+
+            if(amiDataList.get(0).getLvHvVal() != null && amiDataList.get(0).getLvHvVal().equals("고압")) {
+                KepcoAmiVO kepcoAmiVO = amiDataList.get(0);
+                kepcoAmiVO.setNextDate(amiDataList.get(amiDataList.size()-1).getMeteringDate());
+                resultMinute = kepcoAmiMapper.insertHighAmi15MinuteAccmltData(kepcoAmiVO);
+                resultHour = kepcoAmiMapper.insertHighAmiHourData(kepcoAmiVO);
+                resultDay = kepcoAmiMapper.insertHighAmiDayData(kepcoAmiVO);
+            }
+            else {
+                resultHour = kepcoAmiMapper.insertAmiHourData(amiDataList);
+                resultDay = kepcoAmiMapper.insertAmiDayData(amiDataList.get(0));
+            }
 
             //0015 ~ 0045까지 누적값 데이터 보정
             for (int i = 0; i < 3; i++) {
@@ -76,19 +95,12 @@ public class KepcoAmiService {
                 kepcoAmiMapper.updateCorrectDayStartAccmltMeteringVal(data);
             }
 
-            if (amiDataList.get(95).getAccmltMeteringVal().equals("")) {
-                HashMap<String, Object> data = new HashMap<>();
-                data.put("amiIdx", amiDataList.get(95).getAmiIdx());
-                data.put("meteringDate", amiDataList.get(95).getMeteringDate());
-                data.put("meteringTime", amiDataList.get(95).getMeteringTime());
-                data.put("previousDate", amiDataList.get(94).getMeteringDate());
-                kepcoAmiMapper.updateCorrectDayLastAccmltMeteringVal(data);
-            }
-
-            if (resultMinute * resultHour * resultDay > 0 && !errorExist)
+            if (resultMinute * resultHour * resultDay > 0 && !errorExist) {
                 kepcoAmiMapper.updateSingleApiResult(amiDataList.get(0));
+            }
         } catch (Exception e) {
             logger.error("insertAmiData Exception 발생");
+            e.printStackTrace();
             logger.error(e.getMessage());
             logger.error(e.getLocalizedMessage());
         }
@@ -99,7 +111,7 @@ public class KepcoAmiService {
      *
      * @return
      */
-    public void insertAmiErrorData(List<KepcoAmi> amiDataList) {
+    public void insertAmiErrorData(List<KepcoAmiVO> amiDataList) {
         try {
             int resultMinute = kepcoAmiMapper.insertAmi15MinuteErrorData(amiDataList);
         } catch (Exception e) {
@@ -114,5 +126,5 @@ public class KepcoAmiService {
      *
      * @return
      */
-    public void updateSingleApiResult(KepcoAmi amiData) { kepcoAmiMapper.updateSingleApiResult(amiData); }
+    public void updateSingleApiResult(KepcoAmiVO amiData) { kepcoAmiMapper.updateSingleApiResult(amiData); }
 }

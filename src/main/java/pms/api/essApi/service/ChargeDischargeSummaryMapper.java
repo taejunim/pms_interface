@@ -2,8 +2,8 @@ package pms.api.essApi.service;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
-import pms.api.essApi.service.model.ChargeDischargeInsertData;
-import pms.api.essApi.service.model.ChargeDischargeSummary;
+import pms.api.essApi.service.vo.ChargeDischargeInsertVO;
+import pms.api.essApi.service.vo.ChargeDischargeSummaryVO;
 
 /**
  * ChargeDischargeSummaryMapper.java
@@ -19,65 +19,65 @@ public interface ChargeDischargeSummaryMapper {
     /**
      * ESS IDX 가져오기
      */
-    ChargeDischargeInsertData getEssIdx(ChargeDischargeSummary chargeDischargeSummary);
+    ChargeDischargeInsertVO getEssIdx(ChargeDischargeSummaryVO chargeDischargeSummaryVO);
 
     /**
      * 15분 고정형 충전 Summary 등록
      */
-    void insert15FixChargeData(ChargeDischargeInsertData chargeDischargeInsertData);
+    void insert15FixChargeData(ChargeDischargeInsertVO chargeDischargeInsertVO);
 
     /**
      * 15분 고정형 방전 Summary 등록
      */
-    void insert15FixDischargeData(ChargeDischargeInsertData chargeDischargeInsertData);
+    void insert15FixDischargeData(ChargeDischargeInsertVO chargeDischargeInsertVO);
 
     /**
      * 15분 이동형 충전 Summary 등록
      */
-    void insert15MobileChargeData(ChargeDischargeInsertData chargeDischargeInsertData);
+    void insert15MobileChargeData(ChargeDischargeInsertVO chargeDischargeInsertVO);
 
     /**
      * 15분 이동형 방전 Summary 등록
      */
-    void insert15MobileDischargeData(ChargeDischargeInsertData chargeDischargeInsertData);
+    void insert15MobileDischargeData(ChargeDischargeInsertVO chargeDischargeInsertVO);
 
     /**
      * 한시간 고정형 충전 Summary 등록
      */
-    void insert60FixChargeData(ChargeDischargeInsertData chargeDischargeInsertData);
+    void insert60FixChargeData(ChargeDischargeInsertVO chargeDischargeInsertVO);
 
     /**
      * 한시간 고정형 방전 Summary 등록
      */
-    void insert60FixDischargeData(ChargeDischargeInsertData chargeDischargeInsertData);
+    void insert60FixDischargeData(ChargeDischargeInsertVO chargeDischargeInsertVO);
 
     /**
      * 한시간 이동형 충전 Summary 등록
      */
-    void insert60MobileChargeData(ChargeDischargeInsertData chargeDischargeInsertData);
+    void insert60MobileChargeData(ChargeDischargeInsertVO chargeDischargeInsertVO);
 
     /**
      * 한시간 이동형 방전 Summary 등록
      */
-    void insert60MobileDischargeData(ChargeDischargeInsertData chargeDischargeInsertData);
+    void insert60MobileDischargeData(ChargeDischargeInsertVO chargeDischargeInsertVO);
 
     /**
      * 하루 고정형 충전 Summary 등록
      */
-    void insertDayFixChargeData(ChargeDischargeInsertData chargeDischargeInsertData);
+    void insertDayFixChargeData(ChargeDischargeInsertVO chargeDischargeInsertVO);
 
     /**
      * 하루 고정형 방전 Summary 등록
      */
-    void insertDayFixDischargeData(ChargeDischargeInsertData chargeDischargeInsertData);
+    void insertDayFixDischargeData(ChargeDischargeInsertVO chargeDischargeInsertVO);
 
     /**
      * 하루 이동형 충전 Summary 등록
      */
-    void insertDayMobileChargeData(ChargeDischargeInsertData chargeDischargeInsertData);
+    void insertDayMobileChargeData(ChargeDischargeInsertVO chargeDischargeInsertVO);
 
     /**
      * 하루 이동형 방전 Summary 등록
      */
-    void insertDayMobileDischargeData(ChargeDischargeInsertData chargeDischargeInsertData);
+    void insertDayMobileDischargeData(ChargeDischargeInsertVO chargeDischargeInsertVO);
 }

@@ -1,10 +1,10 @@
-package pms.api.essApi.service.model;
+package pms.api.essApi.service.vo;
 
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * ChargeDischargeInsertData.java
+ * ChargeDischargeInsertVO.java
  *
  * 충방전 Summary Insert용 Data
  *
@@ -12,7 +12,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class ChargeDischargeInsertData {
+public class ChargeDischargeInsertVO {
 
     private String essIdx;                   //ESS IDX (레플러스에서 관리하는 ID)
     private String essEquipId;               //ESS ID (메티스 PMS에서 관리하는 ID)

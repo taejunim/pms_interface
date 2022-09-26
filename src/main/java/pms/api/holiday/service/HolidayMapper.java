@@ -1,12 +1,12 @@
-package pms.api.holidayInterface.service;
+package pms.api.holiday.service;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
-import pms.api.holidayInterface.service.model.HolidayInterface;
+import pms.api.holiday.service.vo.HolidayVO;
 
 import java.util.List;
 /**
- * HolidayInterfaceMapper.java
+ * HolidayMapper.java
  *
  * 공휴일 정보 Mapper
  *
@@ -14,19 +14,19 @@ import java.util.List;
  */
 @Mapper
 @Repository
-public interface HolidayInterfaceMapper {
+public interface HolidayMapper {
 
     /**
      * 공휴일 정보 등록
      *
      * @return
      */
-    void insertHolidayData(List<HolidayInterface> holidayInterface);
+    void insertHolidayData(List<HolidayVO> holidayVO);
 
     /**
      * 해당 월 공휴일 데이터 삭제
      *
      * @return
      */
-    void deleteCurrentMonthHolidayData(HolidayInterface holidayInterface);
+    void deleteCurrentMonthHolidayData(HolidayVO holidayVO);
 }

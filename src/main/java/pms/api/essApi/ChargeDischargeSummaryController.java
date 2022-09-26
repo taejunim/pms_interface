@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pms.api.essApi.service.ChargeDischargeSummaryService;
-import pms.api.essApi.service.model.ChargeDischargeInsertData;
-import pms.api.essApi.service.model.ChargeDischargeSummary;
+import pms.api.essApi.service.vo.ChargeDischargeInsertVO;
+import pms.api.essApi.service.vo.ChargeDischargeSummaryVO;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -55,76 +55,76 @@ public class ChargeDischargeSummaryController {
             @ApiResponse(responseCode = "200", description = "Successful operation"),
             @ApiResponse(responseCode = "404", description = "Not found", content = @Content)
     })
-    public ResponseEntity<Map<String,Object>> getAllEss(@RequestBody ChargeDischargeSummary chargeDischargeSummary) {
+    public ResponseEntity<Map<String,Object>> insertChargeDischargeSummary(@RequestBody ChargeDischargeSummaryVO chargeDischargeSummaryVO) {
         Map<String,Object> result = new HashMap<>();
 
         try {
             //unixTimestamp -> String 변환
-            long getMeteringDt = Long.parseLong(chargeDischargeSummary.getMeteringDt());
+            long getMeteringDt = Long.parseLong(chargeDischargeSummaryVO.getMeteringDt());
             Date meteringDt = new Date(getMeteringDt * 1000L);
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 
-            ChargeDischargeInsertData chargeDischargeInsertData = chargeDischargeSummaryService.getEssIdx(chargeDischargeSummary);
-            chargeDischargeInsertData.setEssEquipId(chargeDischargeSummary.getEssEquipId());
-            chargeDischargeInsertData.setChargeDischargeAmount(chargeDischargeSummary.getChargeDischargeAmount());
-            chargeDischargeInsertData.setAccumulateAmount(chargeDischargeSummary.getAccumulateAmount());
-            chargeDischargeInsertData.setMeteringDate(dateFormat.format(meteringDt));
+            ChargeDischargeInsertVO chargeDischargeInsertVO = chargeDischargeSummaryService.getEssIdx(chargeDischargeSummaryVO);
+            chargeDischargeInsertVO.setEssEquipId(chargeDischargeSummaryVO.getEssEquipId());
+            chargeDischargeInsertVO.setChargeDischargeAmount(chargeDischargeSummaryVO.getChargeDischargeAmount());
+            chargeDischargeInsertVO.setAccumulateAmount(chargeDischargeSummaryVO.getAccumulateAmount());
+            chargeDischargeInsertVO.setMeteringDate(dateFormat.format(meteringDt));
 
             String timeFormatType = "";
             //15분 단위 시간 형식
-            if (chargeDischargeSummary.getPeriodType().equals("15")) timeFormatType = "HHmm";
+            if (chargeDischargeSummaryVO.getPeriodType().equals("15")) timeFormatType = "HHmm";
             //한시간 단위 시간 형식
-            else if (chargeDischargeSummary.getPeriodType().equals("60")) timeFormatType = "HH";
+            else if (chargeDischargeSummaryVO.getPeriodType().equals("60")) timeFormatType = "HH";
             SimpleDateFormat timeFormat = new SimpleDateFormat(timeFormatType);
             String meteringTime = timeFormat.format(meteringDt);
-            chargeDischargeInsertData.setMeteringTime(meteringTime);
+            chargeDischargeInsertVO.setMeteringTime(meteringTime);
 
             //충전 - 고정형
-            if (chargeDischargeSummary.getChargeType().equals("chg") && chargeDischargeSummary.getPositionFixYn().equals("fix")) {
+            if (chargeDischargeSummaryVO.getChargeType().equals("chg") && chargeDischargeSummaryVO.getPositionFixYn().equals("fix")) {
                 //15분 단위 데이터
                 if(timeFormatType.equals("HHmm"))
-                    chargeDischargeSummaryService.insert15FixChargeData(chargeDischargeInsertData);
+                    chargeDischargeSummaryService.insert15FixChargeData(chargeDischargeInsertVO);
                 //한시간 단위 데이터
                 else if(timeFormatType.equals("HH"))
-                    chargeDischargeSummaryService.insert60FixChargeData(chargeDischargeInsertData);
+                    chargeDischargeSummaryService.insert60FixChargeData(chargeDischargeInsertVO);
                 //하루 단위 데이터
-                else chargeDischargeSummaryService.insertDayFixChargeData(chargeDischargeInsertData);
+                else chargeDischargeSummaryService.insertDayFixChargeData(chargeDischargeInsertVO);
                 result.put("result", "Success");
             }
             //충전 - 이동형
-            else if (chargeDischargeSummary.getChargeType().equals("chg") && chargeDischargeSummary.getPositionFixYn().equals("mob")) {
+            else if (chargeDischargeSummaryVO.getChargeType().equals("chg") && chargeDischargeSummaryVO.getPositionFixYn().equals("mob")) {
                 //15분 단위 데이터
                 if(timeFormatType.equals("HHmm"))
-                    chargeDischargeSummaryService.insert15MobileChargeData(chargeDischargeInsertData);
+                    chargeDischargeSummaryService.insert15MobileChargeData(chargeDischargeInsertVO);
                 //한시간 단위 데이터
                 else if(timeFormatType.equals("HH"))
-                    chargeDischargeSummaryService.insert60MobileChargeData(chargeDischargeInsertData);
+                    chargeDischargeSummaryService.insert60MobileChargeData(chargeDischargeInsertVO);
                 //하루 단위 데이터
-                else chargeDischargeSummaryService.insertDayMobileChargeData(chargeDischargeInsertData);
+                else chargeDischargeSummaryService.insertDayMobileChargeData(chargeDischargeInsertVO);
                 result.put("result", "Success");
             }
             //방전 - 고정형
-            else if(chargeDischargeSummary.getChargeType().equals("dis") && chargeDischargeSummary.getPositionFixYn().equals("fix")) {
+            else if(chargeDischargeSummaryVO.getChargeType().equals("dis") && chargeDischargeSummaryVO.getPositionFixYn().equals("fix")) {
                 //15분 단위 데이터
                 if(timeFormatType.equals("HHmm"))
-                    chargeDischargeSummaryService.insert15FixDischargeData(chargeDischargeInsertData);
+                    chargeDischargeSummaryService.insert15FixDischargeData(chargeDischargeInsertVO);
                 //한시간 단위 데이터
                 else if(timeFormatType.equals("HH"))
-                    chargeDischargeSummaryService.insert60FixDischargeData(chargeDischargeInsertData);
+                    chargeDischargeSummaryService.insert60FixDischargeData(chargeDischargeInsertVO);
                 //하루 단위 데이터
-                else chargeDischargeSummaryService.insertDayFixDischargeData(chargeDischargeInsertData);
+                else chargeDischargeSummaryService.insertDayFixDischargeData(chargeDischargeInsertVO);
                 result.put("result", "Success");
             }
             //방전 - 이동형
-            else if (chargeDischargeSummary.getChargeType().equals("dis") && chargeDischargeSummary.getPositionFixYn().equals("mob")) {
+            else if (chargeDischargeSummaryVO.getChargeType().equals("dis") && chargeDischargeSummaryVO.getPositionFixYn().equals("mob")) {
                 //15분 단위 데이터
                 if(timeFormatType.equals("HHmm"))
-                    chargeDischargeSummaryService.insert15MobileDischargeData(chargeDischargeInsertData);
+                    chargeDischargeSummaryService.insert15MobileDischargeData(chargeDischargeInsertVO);
                 //한시간 단위 데이터
                 else if(timeFormatType.equals("HH"))
-                    chargeDischargeSummaryService.insert60MobileDischargeData(chargeDischargeInsertData);
+                    chargeDischargeSummaryService.insert60MobileDischargeData(chargeDischargeInsertVO);
                 //하루 단위 데이터
-                else chargeDischargeSummaryService.insertDayMobileDischargeData(chargeDischargeInsertData);
+                else chargeDischargeSummaryService.insertDayMobileDischargeData(chargeDischargeInsertVO);
                 result.put("result", "Success");
             } else {
                 result.put("result", "FAIL");

@@ -1,11 +1,11 @@
-package pms.api.weatherInterface.service;
+package pms.api.weather.service;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
-import pms.api.weatherInterface.service.model.WeatherInterface;
+import pms.api.weather.service.vo.WeatherVO;
 
 /**
- * WeatherInterfaceMapper.java
+ * WeatherMapper.java
  *
  * 날씨 정보 Mapper
  *
@@ -14,13 +14,13 @@ import pms.api.weatherInterface.service.model.WeatherInterface;
 
 @Mapper
 @Repository
-public interface WeatherInterfaceMapper {
+public interface WeatherMapper {
 
     /**
      * 날씨 정보 등록
      *
      * @return
      */
-    void insertWeatherData(WeatherInterface weatherInterface);
+    void insertWeatherData(WeatherVO weatherVO);
 
 }

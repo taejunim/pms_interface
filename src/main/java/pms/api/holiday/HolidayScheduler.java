@@ -1,4 +1,4 @@
-package pms.api.holidayInterface;
+package pms.api.holiday;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -13,8 +13,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
-import pms.api.holidayInterface.service.HolidayInterfaceService;
-import pms.api.holidayInterface.service.model.HolidayInterface;
+import pms.api.holiday.service.HolidayService;
+import pms.api.holiday.service.vo.HolidayVO;
 
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -26,22 +26,22 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * HolidayInterfaceScheduler.java
+ * HolidayScheduler.java
  *
  * 공휴일 정보 Scheduler
  *
  * Created by Youyeong Jo on 2022/05/10.
  */
 @Component
-public class HolidayInterfaceScheduler {
+public class HolidayScheduler {
 
     //로그 설정
-    private static final Logger logger = LoggerFactory.getLogger(HolidayInterfaceScheduler.class);
+    private static final Logger logger = LoggerFactory.getLogger(HolidayScheduler.class);
 
-    private static HolidayInterfaceService holidayInterfaceService;
+    private static HolidayService holidayService;
 
-    public HolidayInterfaceScheduler(HolidayInterfaceService holidayInterfaceService) {
-        HolidayInterfaceScheduler.holidayInterfaceService = holidayInterfaceService;
+    public HolidayScheduler(HolidayService holidayService) {
+        HolidayScheduler.holidayService = holidayService;
     }
 
     @Autowired
@@ -55,11 +55,11 @@ public class HolidayInterfaceScheduler {
     /* static으로 @Value값 사용하기 위한 Inject */
     @Value("${weather.api.serviceKey}")
     public void setServeiceKey(String serviceKey){
-        HolidayInterfaceScheduler.serviceKey = serviceKey;
+        HolidayScheduler.serviceKey = serviceKey;
     }
     @Value("${holiday.api.url}")
     private void setHolidayApiUrl(String holidayApiUrl){
-        HolidayInterfaceScheduler.holidayApiUrl = holidayApiUrl;
+        HolidayScheduler.holidayApiUrl = holidayApiUrl;
     }
 
     /**
@@ -108,11 +108,11 @@ public class HolidayInterfaceScheduler {
             formatDate = format.format(date);
 
             //삭제할 데이터 조건 생성
-            HolidayInterface holidayInterface = new HolidayInterface();
-            holidayInterface.setSearchStart(formatDate);
-            holidayInterface.setSearchEnd(formatDate+"32");
+            HolidayVO holidayVO = new HolidayVO();
+            holidayVO.setSearchStart(formatDate);
+            holidayVO.setSearchEnd(formatDate+"32");
             //해당월 공휴일 데이터 삭제
-            holidayInterfaceService.deleteCurrentMonthHolidayData(holidayInterface);
+            holidayService.deleteCurrentMonthHolidayData(holidayVO);
         } else {                                                    //다음달 연/월 가져오기
             Calendar calendar =  Calendar.getInstance();
             calendar.add(Calendar.MONTH, 1);
@@ -136,18 +136,18 @@ public class HolidayInterfaceScheduler {
 
                 if(jsonObject.get("item").isJsonArray()){
                     //VO 형태로 자동 파싱
-                    Type listType = new TypeToken<ArrayList<HolidayInterface>>() {
+                    Type listType = new TypeToken<ArrayList<HolidayVO>>() {
                     }.getType();
-                    List<HolidayInterface> apiResultBody = gson.fromJson(jsonObject.get("item").toString(), listType);
-                    holidayInterfaceService.insertHolidayData(apiResultBody);
+                    List<HolidayVO> apiResultBody = gson.fromJson(jsonObject.get("item").toString(), listType);
+                    holidayService.insertHolidayData(apiResultBody);
 
                 } else {
                     //VO 형태로 자동 파싱
-                    Type type = new TypeToken<HolidayInterface>() {
+                    Type type = new TypeToken<HolidayVO>() {
                     }.getType();
-                    List<HolidayInterface> apiResultBody = new ArrayList<>();
+                    List<HolidayVO> apiResultBody = new ArrayList<>();
                     apiResultBody.add(gson.fromJson(jsonObject.get("item").toString(), type));
-                    holidayInterfaceService.insertHolidayData(apiResultBody);
+                    holidayService.insertHolidayData(apiResultBody);
                 }
             }
         } catch (JsonSyntaxException | ClassCastException e) {

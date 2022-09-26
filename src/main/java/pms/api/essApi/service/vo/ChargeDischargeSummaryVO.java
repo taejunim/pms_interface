@@ -1,19 +1,19 @@
-package pms.api.essApi.service.model;
+package pms.api.essApi.service.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * ChargeDischargeSummaryController.java
+ * ChargeDischargeSummaryVO.java
  *
- * 충방전 Summary Controller
+ * 충방전 Summary VO (parameter)
  *
  * Created by Youyeong Jo on 2022/04/19.
  */
 @Getter
 @Setter
-public class ChargeDischargeSummary {
+public class ChargeDischargeSummaryVO {
 
     @Schema(name = "essEquipId", description = "ESS ID", example = "E001")
     private String essEquipId;

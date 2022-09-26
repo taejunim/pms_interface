@@ -1,8 +1,8 @@
 package pms.api.essApi.service;
 
 import org.springframework.stereotype.Service;
-import pms.api.essApi.service.model.ChargeDischargeInsertData;
-import pms.api.essApi.service.model.ChargeDischargeSummary;
+import pms.api.essApi.service.vo.ChargeDischargeInsertVO;
+import pms.api.essApi.service.vo.ChargeDischargeSummaryVO;
 
 /**
  * ChargeDischargeSummaryService.java
@@ -23,91 +23,91 @@ public class ChargeDischargeSummaryService {
     /**
      * ESS IDX 가져오기
      */
-    public ChargeDischargeInsertData getEssIdx(ChargeDischargeSummary chargeDischargeSummary){
-        return chargeDischargeSummaryMapper.getEssIdx(chargeDischargeSummary);
+    public ChargeDischargeInsertVO getEssIdx(ChargeDischargeSummaryVO chargeDischargeSummaryVO){
+        return chargeDischargeSummaryMapper.getEssIdx(chargeDischargeSummaryVO);
     }
 
     /**
      * 15분 고정형 충전 Summary 등록
      */
-    public void insert15FixChargeData(ChargeDischargeInsertData chargeDischargeInsertData){
-        chargeDischargeSummaryMapper.insert15FixChargeData(chargeDischargeInsertData);
+    public void insert15FixChargeData(ChargeDischargeInsertVO chargeDischargeInsertVO){
+        chargeDischargeSummaryMapper.insert15FixChargeData(chargeDischargeInsertVO);
     }
 
     /**
      * 15분 고정형 방전 Summary 등록
      */
-    public void insert15FixDischargeData(ChargeDischargeInsertData chargeDischargeInsertData){
-        chargeDischargeSummaryMapper.insert15FixDischargeData(chargeDischargeInsertData);
+    public void insert15FixDischargeData(ChargeDischargeInsertVO chargeDischargeInsertVO){
+        chargeDischargeSummaryMapper.insert15FixDischargeData(chargeDischargeInsertVO);
     }
 
     /**
      * 15분 이동형 충전 Summary 등록
      */
-    public void insert15MobileChargeData(ChargeDischargeInsertData chargeDischargeInsertData){
-        chargeDischargeSummaryMapper.insert15MobileChargeData(chargeDischargeInsertData);
+    public void insert15MobileChargeData(ChargeDischargeInsertVO chargeDischargeInsertVO){
+        chargeDischargeSummaryMapper.insert15MobileChargeData(chargeDischargeInsertVO);
     }
 
     /**
      * 15분 이동형 방전 Summary 등록
      */
-    public void insert15MobileDischargeData(ChargeDischargeInsertData chargeDischargeInsertData){
-        chargeDischargeSummaryMapper.insert15MobileDischargeData(chargeDischargeInsertData);
+    public void insert15MobileDischargeData(ChargeDischargeInsertVO chargeDischargeInsertVO){
+        chargeDischargeSummaryMapper.insert15MobileDischargeData(chargeDischargeInsertVO);
     }
 
     /**
      * 한시간 고정형 충전 Summary 등록
      */
-    public void insert60FixChargeData(ChargeDischargeInsertData chargeDischargeInsertData){
-        chargeDischargeSummaryMapper.insert60FixChargeData(chargeDischargeInsertData);
+    public void insert60FixChargeData(ChargeDischargeInsertVO chargeDischargeInsertVO){
+        chargeDischargeSummaryMapper.insert60FixChargeData(chargeDischargeInsertVO);
     }
 
     /**
      * 한시간 고정형 방전 Summary 등록
      */
-    public void insert60FixDischargeData(ChargeDischargeInsertData chargeDischargeInsertData){
-        chargeDischargeSummaryMapper.insert60FixDischargeData(chargeDischargeInsertData);
+    public void insert60FixDischargeData(ChargeDischargeInsertVO chargeDischargeInsertVO){
+        chargeDischargeSummaryMapper.insert60FixDischargeData(chargeDischargeInsertVO);
     }
 
     /**
      * 한시간 이동형 충전 Summary 등록
      */
-    public void insert60MobileChargeData(ChargeDischargeInsertData chargeDischargeInsertData){
-        chargeDischargeSummaryMapper.insert60MobileChargeData(chargeDischargeInsertData);
+    public void insert60MobileChargeData(ChargeDischargeInsertVO chargeDischargeInsertVO){
+        chargeDischargeSummaryMapper.insert60MobileChargeData(chargeDischargeInsertVO);
     }
 
     /**
      * 한시간 이동형 방전 Summary 등록
      */
-    public void insert60MobileDischargeData(ChargeDischargeInsertData chargeDischargeInsertData){
-        chargeDischargeSummaryMapper.insert60MobileDischargeData(chargeDischargeInsertData);
+    public void insert60MobileDischargeData(ChargeDischargeInsertVO chargeDischargeInsertVO){
+        chargeDischargeSummaryMapper.insert60MobileDischargeData(chargeDischargeInsertVO);
     }
 
     /**
      * 하루 고정형 충전 Summary 등록
      */
-    public void insertDayFixChargeData(ChargeDischargeInsertData chargeDischargeInsertData){
-        chargeDischargeSummaryMapper.insertDayFixChargeData(chargeDischargeInsertData);
+    public void insertDayFixChargeData(ChargeDischargeInsertVO chargeDischargeInsertVO){
+        chargeDischargeSummaryMapper.insertDayFixChargeData(chargeDischargeInsertVO);
     }
 
     /**
      * 하루 고정형 방전 Summary 등록
      */
-    public void insertDayFixDischargeData(ChargeDischargeInsertData chargeDischargeInsertData){
-        chargeDischargeSummaryMapper.insertDayFixDischargeData(chargeDischargeInsertData);
+    public void insertDayFixDischargeData(ChargeDischargeInsertVO chargeDischargeInsertVO){
+        chargeDischargeSummaryMapper.insertDayFixDischargeData(chargeDischargeInsertVO);
     }
 
     /**
      * 하루 이동형 충전 Summary 등록
      */
-    public void insertDayMobileChargeData(ChargeDischargeInsertData chargeDischargeInsertData){
-        chargeDischargeSummaryMapper.insertDayMobileChargeData(chargeDischargeInsertData);
+    public void insertDayMobileChargeData(ChargeDischargeInsertVO chargeDischargeInsertVO){
+        chargeDischargeSummaryMapper.insertDayMobileChargeData(chargeDischargeInsertVO);
     }
 
     /**
      * 하루 이동형 방전 Summary 등록
      */
-    public void insertDayMobileDischargeData(ChargeDischargeInsertData chargeDischargeInsertData){
-        chargeDischargeSummaryMapper.insertDayMobileDischargeData(chargeDischargeInsertData);
+    public void insertDayMobileDischargeData(ChargeDischargeInsertVO chargeDischargeInsertVO){
+        chargeDischargeSummaryMapper.insertDayMobileDischargeData(chargeDischargeInsertVO);
     }
 }

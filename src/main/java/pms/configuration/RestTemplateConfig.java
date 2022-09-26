@@ -1,7 +1,5 @@
 package pms.configuration;
 
-import org.apache.http.HttpRequest;
-
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.springframework.context.annotation.Bean;
