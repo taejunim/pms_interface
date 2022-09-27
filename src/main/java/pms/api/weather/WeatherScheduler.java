@@ -103,7 +103,7 @@ public class WeatherScheduler {
      * 매 시간 10분에 날씨 관련 API 호출 하여 응답값 DB에 저장
      * 실제 반영 시에는 주석을 해제하여 반영
      **/
-    @Scheduled(cron="0 10 0/1 * * *" )
+    //@Scheduled(cron="0 10 0/1 * * *" )
     public void getWeatherData() throws URISyntaxException, UnsupportedEncodingException {
 
         logger.debug("날씨 Scheduler 실행 ====>");
