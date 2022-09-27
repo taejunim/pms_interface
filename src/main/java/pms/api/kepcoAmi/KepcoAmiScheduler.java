@@ -2,7 +2,6 @@ package pms.api.kepcoAmi;
 
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
-import com.sun.prism.shader.Solid_TextureYV12_AlphaTest_Loader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
