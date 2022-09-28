@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pms.api.smpLimitCost.service.SmpLimitCostMapper">
+    <!-- 당일 등록된 계통 한계 가격 있는지 조회 -->
+    <select id="selectTodaySmpLimitCostCount" resultType="int">
+        SELECT COUNT(*) count
+        FROM tb_smp_api
+        WHERE trade_day = DATE_FORMAT(current_timestamp, '%Y%m%d')
+    </select>
+    <!-- SMP 계통 한계 가격 조회 데이터 insert -->
+    <insert id="insertSmpLimitCostData" parameterType="SmpLimitCostVO">
+        INSERT INTO tb_smp_api(trade_day, trade_hour, area_cd, smp)
+        VALUES
+        <foreach collection="list" index="index" item="item" separator=",">
+            ( #{item.tradeDay}
+            , LPAD(#{item.tradeHour},'2','0')
+            , #{item.areaCd}
+            , #{item.smp} )
+        </foreach>
+    </insert>
+</mapper>

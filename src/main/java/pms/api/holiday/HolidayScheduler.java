@@ -53,7 +53,7 @@ public class HolidayScheduler {
     private static String holidayApiUrl;
 
     /* static으로 @Value값 사용하기 위한 Inject */
-    @Value("${weather.api.serviceKey}")
+    @Value("${data.api.serviceKey}")
     public void setServeiceKey(String serviceKey){
         HolidayScheduler.serviceKey = serviceKey;
     }
