@@ -14,6 +14,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
+//@Schema(name = "ESS", description = "ESS 정보")
 public class ESS {
     @Schema(name = "essCode", description = "ESS 코드", example = "E001")
     private String essCode;
