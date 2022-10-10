@@ -139,10 +139,10 @@
         ) AS A
 
         ON DUPLICATE KEY UPDATE
-        metering_val = meteringVal,
+        metering_val        = meteringVal,
         accmlt_metering_val = accmltMeteringVal,
-        api_call_result = apiCallResult,
-        error_response_msg = errorResponseMsg
+        api_call_result     = apiCallResult,
+        mod_dt              = sysdate()
 
     </insert>
 
@@ -415,6 +415,7 @@
             metering_date
           , mid
           , use_type
+          , reg_dt
           , ami_idx
           , kepco_cstmr_no
           , metering_val
@@ -426,6 +427,7 @@
                 #{meteringDate},
                 #{meterNo},
                 '1',
+                sysdate(),
                 #{amiIdx},
                 #{custNo},
                 (
