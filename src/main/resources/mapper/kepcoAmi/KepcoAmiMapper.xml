@@ -3,7 +3,7 @@
 
 <mapper namespace="pms.api.kepcoAmi.service.KepcoAmiMapper">
     <!-- EDSM에 등록된 AMI중, DB에도 저장된 값 찾기 -->
-    <select id="getRegisterAmi" parameterType="HashMap" resultType="KepcoAmiVO">
+    <select id="selectRegisterAmi" parameterType="HashMap" resultType="KepcoAmiVO">
         SELECT a.ami_idx amiIdx,
                a.mid     meterNo,
                b.custNo  custNo
@@ -38,6 +38,11 @@
             OR
               a.request_success_dt IS NULL
             )
+        AND a.kepco_cstmr_no IN (
+        <foreach collection="list" index="index" item="item" separator=",">
+            #{item.custNo}
+        </foreach>
+        )
     </select>
 
     <!-- 한전 API 응답 결과 등록 -->
@@ -80,15 +85,16 @@
                                     metering_val,
                                     accmlt_metering_val,
                                     api_call_result,
-                                    error_response_msg
+                                    error_response_msg,
+                                    mod_dt
                                  )
         SELECT *
         FROM (
         <foreach collection="list" index="index" item="item" separator="UNION ALL">
             ( SELECT
-                #{item.meteringDate},
-                #{item.meteringTime},
-                #{item.amiIdx},
+                #{item.meteringDate} AS meteringDate,
+                #{item.meteringTime} AS meteringTime,
+                #{item.amiIdx}       AS amiIdx,
                 '1',
                 sysdate(),
                 #{item.meterNo},
@@ -133,7 +139,14 @@
                     </otherwise>
                 </choose>
                 #{item.apiCallResult} AS apiCallResult,
-                #{item.errorResponseMsg} AS errorResponseMsg
+                #{item.errorResponseMsg} AS errorResponseMsg,
+                ( SELECT IF(metering_val IS NULL , sysdate(), mod_dt)
+                  FROM   tb_kepco_15m
+                  WHERE  1 = 1
+                  AND use_type      = '1'
+                  AND ami_idx       = #{item.amiIdx}
+                  AND metering_date = #{item.meteringDate}
+                  AND hhmm          = #{item.meteringTime}) AS modDt
             )
         </foreach>
         ) AS A
@@ -142,7 +155,7 @@
         metering_val        = meteringVal,
         accmlt_metering_val = accmltMeteringVal,
         api_call_result     = apiCallResult,
-        mod_dt              = sysdate()
+        mod_dt              = modDt
 
     </insert>
 
@@ -163,15 +176,22 @@
             FROM (
             <foreach collection="list" index="index" item="item" separator="UNION ALL">
                     (
-                    SELECT
-                        DATE_FORMAT(DATE_ADD(DATE_FORMAT(CONCAT( #{item.meteringDate}, #{item.meteringTime},'00'),'%Y%m%d%H%i%s'), INTERVAL -15 MINUTE ),'%Y%m%d'),
-                        DATE_FORMAT(DATE_ADD(DATE_FORMAT(CONCAT( #{item.meteringDate}, #{item.meteringTime},'00'),'%Y%m%d%H%i%s'), INTERVAL -15 MINUTE),'%H'),
-                        #{item.amiIdx},
-                        '1',
-                        sysdate(),
-                        #{item.meterNo},
-                        #{item.custNo},
-                        SUM(metering_val) AS meteringVal,
+                SELECT
+                    #{item.meteringDate},
+                <choose>
+                <when test="item.meteringTime eq '2400'">
+                    '24',
+                </when>
+                <otherwise>
+                    LPAD(DATE_FORMAT(DATE_ADD(DATE_FORMAT(CONCAT(#{item.meteringDate}, #{item.meteringTime},'00'),'%Y%m%d%H%i%s'), INTERVAL -15 MINUTE),'%H') + 1, 2, '0'),
+                </otherwise>
+                </choose>
+                    #{item.amiIdx},
+                    '1',
+                    sysdate(),
+                    #{item.meterNo},
+                    #{item.custNo},
+                SUM(metering_val) AS meteringVal,
                 <choose>
                 <when test="item.accmltMeteringVal != null and item.accmltMeteringVal != ''">
                     #{item.accmltMeteringVal} AS accmltMeteringVal
@@ -184,21 +204,16 @@
                     WHERE 1 = 1
                     AND use_type = '1'
                     AND mid = #{item.meterNo}
-                    <choose>
-                        <when test="item.meteringTime eq '0000'">
-                            AND (metering_date, hhmm) IN (
-                            ( #{item.meteringDate}, #{item.meteringTime})
-                            ,( DATE_FORMAT(DATE_ADD(DATE_FORMAT(CONCAT( #{item.meteringDate}, '0000','00'),'%Y%m%d%H%i%s'), INTERVAL -15 MINUTE ),'%Y%m%d'), '2345')
-                            , (DATE_FORMAT(DATE_ADD(DATE_FORMAT(CONCAT( #{item.meteringDate}, '0000','00'),'%Y%m%d%H%i%s'), INTERVAL -15 MINUTE ),'%Y%m%d'), '2330')
-                            , (DATE_FORMAT(DATE_ADD(DATE_FORMAT(CONCAT( #{item.meteringDate}, '0000','00'),'%Y%m%d%H%i%s'), INTERVAL -15 MINUTE ),'%Y%m%d'), '2315')
-                            )
-                        </when>
-                        <otherwise>
-                            AND metering_date = #{item.meteringDate}
-                            AND hhmm <![CDATA[ <= ]]> #{item.meteringTime}
-                            AND hhmm <![CDATA[ > ]]>  CONCAT(DATE_FORMAT(DATE_ADD(DATE_FORMAT(CONCAT( #{item.meteringDate}, #{item.meteringTime},'00'),'%Y%m%d%H%i%s'), INTERVAL -15 MINUTE),'%H'),'00')
-                        </otherwise>
-                    </choose>
+                    AND metering_date = #{item.meteringDate}
+                    AND hhmm  <![CDATA[ <= ]]>  #{item.meteringTime}
+                <choose>
+                <when test="item.meteringTime eq '2400'">
+                    AND hhmm  <![CDATA[ > ]]> '2300'
+                </when>
+                <otherwise>
+                    AND hhmm  <![CDATA[ > ]]> CONCAT(DATE_FORMAT(DATE_ADD(DATE_FORMAT(CONCAT(#{item.meteringDate}, #{item.meteringTime},'00'),'%Y%m%d%H%i%s'), INTERVAL -15 MINUTE),'%H'),'00')
+                </otherwise>
+                </choose>
                   )
             </foreach>
             ) AS A
@@ -291,30 +306,57 @@
 
     <!-- 한전 AMI 15분 누적 데이터 교정(00시 15분 ~ 45분) -->
     <update id="updateCorrectDayStartAccmltMeteringVal" parameterType="HashMap">
-        UPDATE tb_kepco_15m
-        SET accmlt_metering_val  = (
-            SELECT a.accmlt_metering_val + IFNULL(b.metering_val, 0)
-            FROM
-            (
-                SELECT accmlt_metering_val
-                FROM tb_kepco_15m
-                WHERE ami_idx       = #{amiIdx}
-                AND use_type        = '1'
-                AND metering_date   = #{meteringDate}
-                AND hhmm            = #{previousTime}
-            ) AS a, (
-                SELECT metering_val
-                FROM tb_kepco_15m
-                WHERE ami_idx       = #{amiIdx}
-                AND use_type        = '1'
-                AND metering_date   = #{meteringDate}
-                AND hhmm            = #{meteringTime}
+        INSERT INTO tb_kepco_15m(metering_date, hhmm, mid, use_type, accmlt_metering_val)
+        SELECT *
+        FROM (
+                SELECT #{meteringDate},
+                        b.hhmm,
+                        #{meterNo},
+                        '1',
+                        nextAccmltMeteringVal - (
+                            SELECT SUM(metering_val)
+                            FROM tb_kepco_15m
+                            WHERE ami_idx = #{amiIdx}
+                            AND use_type = '1'
+                            AND metering_date = #{meteringDate}
+                            AND hhmm <![CDATA[ > ]]> b.hhmm
+                            AND hhmm <![CDATA[ <= ]]> b.nextHHmm
+                        ) accmltMeteringVal
+                FROM (
+                    SELECT a.*
+                    , ( SELECT hhmm
+                        FROM tb_kepco_15m
+                        WHERE ami_idx = #{amiIdx}
+                        AND use_type = '1'
+                        AND metering_date = #{meteringDate}
+                        AND hhmm <![CDATA[ > ]]> a.hhmm
+                        AND accmlt_metering_val != 0
+                        LIMIT 1
+                        ) nextHHmm
+                    , (
+                        SELECT accmlt_metering_val
+                        FROM tb_kepco_15m
+                        WHERE ami_idx = #{amiIdx}
+                        AND use_type = '1'
+                        AND metering_date = #{meteringDate}
+                        AND hhmm <![CDATA[ > ]]> a.hhmm
+                        AND accmlt_metering_val != 0
+                        LIMIT 1
+                        ) nextAccmltMeteringVal
+                    FROM (
+                    SELECT hhmm,
+                           metering_val
+                    FROM tb_kepco_15m
+                    WHERE ami_idx = #{amiIdx}
+                    AND use_type = '1'
+                    AND metering_date = #{meteringDate}
+                    AND accmlt_metering_val = 0
+                ) a
             ) b
-        )
-        WHERE ami_idx       = #{amiIdx}
-          AND use_type      = '1'
-          AND metering_date = #{meteringDate}
-          AND hhmm          = #{meteringTime}
+        ) result
+        ON DUPLICATE KEY UPDATE
+        accmlt_metering_val = accmltMeteringVal
+
     </update>
 
     <!-- 한전 AMI 15분 누적 데이터 등록 (고압용) -->
@@ -328,25 +370,22 @@
                   , #{amiIdx}
                   , (
                     SELECT SUM(metering_val) accmltMeteringVal
-                           FROM tb_kepco_15m
-                           WHERE 1        = 1
-                           AND   use_type = '1'
-                           AND   ami_idx  = #{amiIdx}
-                           AND   mid      = #{meterNo}
-                           AND   CONCAT(metering_date, hhmm)  <![CDATA[ <= ]]> a.date
+                    FROM tb_kepco_15m
+                    WHERE 1        = 1
+                    AND   use_type = '1'
+                    AND   ami_idx  = #{amiIdx}
+                    AND   mid      = #{meterNo}
+                    AND   CONCAT(metering_date, hhmm)   <![CDATA[ <= ]]>  a.date
                     ) accmltMeteringVal
             FROM (
-                SELECT  metering_val
-                      , CONCAT(metering_date, hhmm) date
-                      , hhmm
-                FROM tb_kepco_15m
-                WHERE 1 = 1
-                AND   use_type       = '1'
-                AND   ami_idx        = #{amiIdx}
-                AND   mid            = #{meterNo}
-                AND   (metering_date = #{meteringDate} OR metering_date = #{nextDate})
-                AND   CONCAT(metering_date, hhmm)  <![CDATA[ > ]]> CONCAT(#{meteringDate}, '0000')
-                AND   CONCAT(metering_date, hhmm)  <![CDATA[ < ]]> CONCAT(#{nextDate}, '0015')
+            SELECT CONCAT(metering_date, hhmm) date
+            , hhmm
+            FROM tb_kepco_15m
+            WHERE 1 = 1
+            AND   use_type       = '1'
+            AND   ami_idx        = #{amiIdx}
+            AND   mid            = #{meterNo}
+            AND   metering_date  = #{meteringDate}
             ) a
         ) result
         ON DUPLICATE KEY UPDATE
@@ -377,31 +416,29 @@
                     , a.meteringVal meteringVal
                     , (
                     SELECT SUM(metering_val) accmltMeteringVal
-                    FROM tb_kepco_15m
+                    FROM   tb_kepco_15m
                     WHERE 1         = 1
                     AND   use_type  = '1'
                     AND   ami_idx   = #{amiIdx}
                     AND   mid       = #{meterNo}
-                    AND   CONCAT(metering_date, hhmm) <![CDATA[ <= ]]> LEFT(a.date, 12)
+                    AND   CONCAT(metering_date, hhmm) <![CDATA[ <= ]]> a.date
                     )  accmltMeteringVal
             FROM (
-                SELECT  LEFT(hhmm, 2)      hh
-                       , MAX(date)         date
-                       , SUM(metering_val) meteringVal
+                SELECT     hh
+                         , MAX(date)         date
+                         , SUM(metering_val) meteringVal
                 FROM (
                     SELECT metering_val,
-                           CONCAT(metering_date, hhmm, '00') date,
-                           hhmm
+                           IF(hhmm = '2400','24',LPAD(DATE_FORMAT(DATE_ADD(DATE_FORMAT(CONCAT(metering_date, hhmm, '00'),'%Y%m%d%H%i%s'), INTERVAL -15 MINUTE),'%H') + 1, 2, '0')) hh,
+                           CONCAT(metering_date, hhmm) date
                     FROM tb_kepco_15m
                     WHERE 1 = 1
                     AND use_type = '1'
                     AND ami_idx  = #{amiIdx}
                     AND mid      = #{meterNo}
-                    AND (metering_date = #{meteringDate} OR metering_date = #{nextDate})
-                    AND CONCAT(metering_date, hhmm) <![CDATA[ > ]]> CONCAT(#{meteringDate},'0000')
-                    AND CONCAT(metering_date, hhmm) <![CDATA[ < ]]> CONCAT(#{nextDate}, '0015')
+                    AND metering_date  = #{meteringDate}
                 ) b
-                GROUP BY DATE_FORMAT(DATE_ADD(DATE_FORMAT(date, '%Y%m%d%H%i%s'), INTERVAL -15 MINUTE), '%H')
+                GROUP BY hh
             ) a
         ) result
         ON DUPLICATE KEY UPDATE
@@ -450,5 +487,48 @@
         ON DUPLICATE KEY UPDATE
           metering_val        = meteringVal
         , accmlt_metering_val = accmltMeteringVal
+    </insert>
+    <!-- 누락됬다 새로 들어온 데이터 조회 -->
+    <select id="selectNewData" parameterType="HashMap" resultType="CblManageVO">
+        SELECT result.metering_date meteringDate
+             , result.startHhmm     startHhmm
+             , MAX(result.hhmm)     endHhmm
+             , #{amiIdx}            amiIdx
+        FROM (
+            SELECT @startHhmm := IF(noDifferent != 0, '', IF(@startHhmm != '', @startHhmm, hhmm)) startHhmm, c.*
+            FROM (
+                SELECT metering_date
+                     , a.hhmm                                         hhmm
+                     , a.metering_val                                 originalValue
+                     , b.metering_val                                 contrastValue
+                     , a.metering_val = IFNULL(b.metering_val,'null') noDifferent
+                FROM (
+                    SELECT metering_date
+                         , hhmm
+                         , IFNULL(metering_val, 'null') metering_val
+                    FROM tb_kepco_15m
+                    WHERE metering_date = #{meteringDate}
+                    AND mid = #{meterNo}
+                    AND use_type = '1'
+                    ) a LEFT OUTER JOIN
+                    (
+        <foreach collection="list" index="index" item="item" separator="UNION ALL">
+                    SELECT #{item.meteringTime} hhmm, CAST(#{item.meteringVal} AS DECIMAL(10,3)) metering_val
+        </foreach>
+                     ) b
+                 ON a.hhmm = b.hhmm
+                 ) c,
+                 (SELECT @startHhmm := '') x
+        ) result
+        WHERE startHHmm != ''
+        GROUP BY startHhmm
+    </select>
+    <!-- 누락됬다 새로 들어온 데이터 CBL 계산 테이블에 insert -->
+    <insert id="insertRefreshDataToCblTable" parameterType="CblManageVO">
+        INSERT INTO tb_ami_data_refill(ami_idx, start_date, start_hhmm, end_date, end_hhmm, reg_dt)
+        VALUES
+        <foreach collection="list" index="index" item="item" separator=",">
+            (#{item.amiIdx}, #{item.meteringDate} , #{item.startHhmm} , #{item.meteringDate} , #{item.endHhmm} , sysdate())
+        </foreach>
     </insert>
 </mapper>

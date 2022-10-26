@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import pms.api.holiday.HolidayScheduler;
+import pms.api.kepcoAmi.service.vo.CblManageVO;
 import pms.api.kepcoAmi.service.vo.KepcoAmiVO;
 
 import java.util.HashMap;
@@ -35,8 +36,8 @@ public class KepcoAmiService {
      *
      * @return
      */
-    public List<KepcoAmiVO> selectCallApiList() {
-        return kepcoAmiMapper.selectCallApiList();
+    public List<KepcoAmiVO> selectCallApiList(List<KepcoAmiVO> amiList) {
+        return kepcoAmiMapper.selectCallApiList(amiList);
     }
 
     /**
@@ -44,8 +45,8 @@ public class KepcoAmiService {
      *
      * @return
      */
-    public List<KepcoAmiVO> getRegisterAmi(HashMap<String,Object> amiList) {
-        return kepcoAmiMapper.getRegisterAmi(amiList);
+    public List<KepcoAmiVO> selectRegisterAmi(HashMap<String,Object> amiList) {
+        return kepcoAmiMapper.selectRegisterAmi(amiList);
     }
 
     /**
@@ -65,6 +66,15 @@ public class KepcoAmiService {
     public void insertAmiData(List<KepcoAmiVO> amiDataList, Boolean errorExist) {
 
         try {
+            //기존 등록 데이터와 다른 데이터를 찾기 위한 파라미터 세팅
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("amiIdx", amiDataList.get(0).getAmiIdx());
+            map.put("meteringDate", amiDataList.get(0).getMeteringDate());
+            map.put("meterNo", amiDataList.get(0).getMeterNo());
+            map.put("list", amiDataList);
+            //기존 등록 데이터와 다른 데이터 시간대 조회 (새로운 데이터로 등록되면 어떤 건이 바뀌었는지 알 수 없음 -> 등록 전 조회함.
+            List<CblManageVO> cblManageList = kepcoAmiMapper.selectNewData(map);
+
             //15분 데이터 등록
             int resultMinute = kepcoAmiMapper.insertAmi15MinuteData(amiDataList);
             //한시간 데이터 등록
@@ -73,7 +83,6 @@ public class KepcoAmiService {
 
             if(amiDataList.get(0).getLvHvVal() != null && amiDataList.get(0).getLvHvVal().equals("고압")) {
                 KepcoAmiVO kepcoAmiVO = amiDataList.get(0);
-                kepcoAmiVO.setNextDate(amiDataList.get(amiDataList.size()-1).getMeteringDate());
                 resultMinute = kepcoAmiMapper.insertHighAmi15MinuteAccmltData(kepcoAmiVO);
                 resultHour = kepcoAmiMapper.insertHighAmiHourData(kepcoAmiVO);
                 resultDay = kepcoAmiMapper.insertHighAmiDayData(kepcoAmiVO);
@@ -81,41 +90,24 @@ public class KepcoAmiService {
             else {
                 resultHour = kepcoAmiMapper.insertAmiHourData(amiDataList);
                 resultDay = kepcoAmiMapper.insertAmiDayData(amiDataList.get(0));
-            }
-
-            //0015 ~ 0045까지 누적값 데이터 보정
-            for (int i = 0; i < 3; i++) {
-                HashMap<String, Object> data = new HashMap<>();
-                data.put("amiIdx", amiDataList.get(i).getAmiIdx());
-                data.put("meteringDate", amiDataList.get(i).getMeteringDate());
-                data.put("meteringTime", amiDataList.get(i).getMeteringTime());
-                if (i == 0) data.put("previousTime", "0000");
-                else data.put("previousTime", amiDataList.get(i - 1).getMeteringTime());
-
-                kepcoAmiMapper.updateCorrectDayStartAccmltMeteringVal(data);
+                //0015 ~ 0045까지 누적값 데이터 보정
+                kepcoAmiMapper.updateCorrectDayStartAccmltMeteringVal(amiDataList.get(0));
             }
 
             if (resultMinute * resultHour * resultDay > 0 && !errorExist) {
                 kepcoAmiMapper.updateSingleApiResult(amiDataList.get(0));
             }
+
+            //바뀐 데이터가 존재한다면
+            if(cblManageList.size() > 0) {
+                logger.debug("--------------------- CBL을 새로 계산해야 하는 건이 존재 합니다. ---------------------");
+                logger.debug("AMI Idx : " + cblManageList.get(0).getAmiIdx() + " 날짜 : " + cblManageList.get(0).getMeteringDate());
+                logger.debug("총 : " + kepcoAmiMapper.insertRefreshDataToCblTable(cblManageList) + "개 누락 시간대 등록되었습니다.");
+                logger.debug("-----------------------------------------------------------------------------");
+            }
+
         } catch (Exception e) {
             logger.error("insertAmiData Exception 발생");
-            e.printStackTrace();
-            logger.error(e.getMessage());
-            logger.error(e.getLocalizedMessage());
-        }
-    }
-
-    /**
-     * 한전 AMI 에러 데이터 등록
-     *
-     * @return
-     */
-    public void insertAmiErrorData(List<KepcoAmiVO> amiDataList) {
-        try {
-            int resultMinute = kepcoAmiMapper.insertAmi15MinuteErrorData(amiDataList);
-        } catch (Exception e) {
-            logger.error("insertAmiErrorData Exception 발생");
             logger.error(e.getMessage());
             logger.error(e.getLocalizedMessage());
         }

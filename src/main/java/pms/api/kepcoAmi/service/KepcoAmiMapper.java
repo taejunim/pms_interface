@@ -2,6 +2,7 @@ package pms.api.kepcoAmi.service;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
+import pms.api.kepcoAmi.service.vo.CblManageVO;
 import pms.api.kepcoAmi.service.vo.KepcoAmiVO;
 
 import java.util.HashMap;
@@ -24,14 +25,14 @@ public interface KepcoAmiMapper {
      *
      * @return
      */
-    List<KepcoAmiVO> getRegisterAmi(HashMap<String,Object> amiList);
+    List<KepcoAmiVO> selectRegisterAmi(HashMap<String,Object> amiList);
 
     /**
      * 소비데이터 등록 안된 고객번호 조회
      *
      * @return
      */
-    List<KepcoAmiVO>  selectCallApiList();
+    List<KepcoAmiVO>  selectCallApiList(List<KepcoAmiVO> amiList);
 
     /**
      * 한전 API 응답 결과 테이블 데이터 등록 및 업데이트
@@ -80,7 +81,7 @@ public interface KepcoAmiMapper {
      *
      * @return
      */
-    void updateCorrectDayStartAccmltMeteringVal(HashMap<String,Object> ami);
+    void updateCorrectDayStartAccmltMeteringVal(KepcoAmiVO ami);
 
     /**
      * 15분 한전 AMI 누적 데이터 등록 (고압)
@@ -103,4 +104,17 @@ public interface KepcoAmiMapper {
      */
     int insertHighAmiDayData(KepcoAmiVO ami);
 
+    /**
+     * 누락됬다 새로 들어온 데이터 조회
+     *
+     * @return
+     */
+    List<CblManageVO> selectNewData(HashMap<String,Object> amiList);
+
+    /**
+     * 새로 들어온 데이터 CBL 관리 테이블 등록
+     *
+     * @return
+     */
+    int insertRefreshDataToCblTable(List<CblManageVO> cblManageList);
 }

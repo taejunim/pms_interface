@@ -96,7 +96,6 @@ public class KepcoAmiScheduler {
         SimpleDateFormat timeFormat = new SimpleDateFormat("HHmm");
 
         //개발용 메소드 test(); 계기번호와 고객번호 자동으로 세팅해줌. 개발시에 주석 풀고 사용.
-        //test();
         if(amiList.size() > 0 && customerList.size() > 0) {
             logger.debug("==== 한전 전력 소비 데이터 Scheduler 실행 ====??");
             Calendar calendar             =  Calendar.getInstance();
@@ -123,7 +122,7 @@ public class KepcoAmiScheduler {
             kepcoAmiService.insertApiResultList(amiList);
 
             //전력 조회 API 호출해야 하는 고객 번호 LIST CALL (미완료 데이터들)
-            List<KepcoAmiVO> apiCallList  = kepcoAmiService.selectCallApiList();
+            List<KepcoAmiVO> apiCallList  = kepcoAmiService.selectCallApiList(amiList);
 
             for (KepcoAmiVO api : apiCallList) {  //url 정의 (서비스 키, 데이터 타입, 고객번호 SET
                 boolean noDataUpdateExist = false;
@@ -167,9 +166,9 @@ public class KepcoAmiScheduler {
                             boolean noDataExist = false;
                             KepcoAmiVO result = new KepcoAmiVO();
 
-                            if(j == 0 && dataRequestDt.equals(highPressureFormatDate)){
+                            if(dataRequestDt.equals(highPressureFormatDate)){
                                 result.setLvHvVal("고압");
-                            }
+                            } else result.setLvHvVal("저압");
 
                             result.setCustNo(api.getCustNo());
                             result.setAmiIdx(api.getAmiIdx());
@@ -182,52 +181,41 @@ public class KepcoAmiScheduler {
 
                             String meteringVal = null;
 
-                            //자정은 다음 날 자정, 24시00분의 데이터를 파싱한다.
-                            if (time.contains("0000")) {
-                                Date nextDate = new Date(calendar2.getTimeInMillis());
-                                result.setMeteringDate(format.format(nextDate));
 
-                                //자정 데이터 누락시
-                                if(jsonObject.get("pwr_qty2400").toString().replaceAll("\"", "").equals("")) {
-                                    noDataUpdateExist  = true;
-                                    noDataExist = true;
-                                }
-                                //자정 데이터 존재
-                                else {
-                                    meteringVal = jsonObject.get("pwr_qty2400").toString().replaceAll("\"", "");
+                            //데이터 파싱
+                            result.setMeteringDate(jsonObject.get("mr_ymd").toString().replaceAll("\"",""));
 
-                                    if(!jsonObject.get("vld_pwr2400").toString().replaceAll("\"","").equals(""))
-                                        tmpAccmltMeteringVal = Double.parseDouble(jsonObject.get("vld_pwr2400").toString().replaceAll("\"",""));
+                            //자정일 때 시간 0000 -> 2400
+                            if(time.equals("0000")) time = "2400";
+
+                            //데이터 누락시
+                            if(jsonObject.get("pwr_qty" + time).toString().replaceAll("\"", "").equals("")) {
+                                noDataUpdateExist = true;
+                                noDataExist = true;
+                                if(result.getLvHvVal().equals("고압")) {
+                                    int minuteDiff = (96 - j) * 15;
+                                    calendar2.add(Calendar.MINUTE, minuteDiff);
+                                    break;
                                 }
                             }
-                            //자정이 아닐떄
+                            //데이터 존재
                             else {
-                                result.setMeteringDate(jsonObject.get("mr_ymd").toString().replaceAll("\"",""));
+                                meteringVal = jsonObject.get("pwr_qty" + time).toString().replaceAll("\"", "");
 
-                                //데이터 누락시
-                                if(jsonObject.get("pwr_qty" + time).toString().replaceAll("\"", "").equals("")) {
-                                    noDataUpdateExist = true;
-                                    noDataExist = true;
+                                //정각 AND 누적 데이터 누락 아닐 때
+                                if (time.startsWith("00", 2) && !jsonObject.get("vld_pwr" + time).toString().replaceAll("\"","").equals("")) {
+                                    Double accmltMeteringVal = Double.parseDouble(jsonObject.get("vld_pwr" + time).toString().replaceAll("\"",""));
+
+                                    //누적 데이터는 누락이 아니지만 측정값이 누락일 때
+                                    if(meteringVal.equals("0") && tmpAccmltMeteringVal != tmpAccmltMeteringVal) {
+                                        meteringVal = String.valueOf(accmltMeteringVal - tmpAccmltMeteringVal);
+                                    }
+                                    tmpAccmltMeteringVal = accmltMeteringVal;
                                 }
-                                //데이터 존재
+                                //정각이 아닐 때
                                 else {
-                                    meteringVal = jsonObject.get("pwr_qty" + time).toString().replaceAll("\"", "");
-
-                                    //정각 AND 누적 데이터 누락 아닐 때
-                                    if (time.startsWith("00", 2) && !jsonObject.get("vld_pwr" + time).toString().replaceAll("\"","").equals("")) {
-                                        Double accmltMeteringVal = Double.parseDouble(jsonObject.get("vld_pwr" + time).toString().replaceAll("\"",""));
-
-                                        //누적 데이터는 누락이 아니지만 측정값이 누락일 때
-                                        if(meteringVal.equals("0") && tmpAccmltMeteringVal != tmpAccmltMeteringVal) {
-                                            meteringVal = String.valueOf(accmltMeteringVal - tmpAccmltMeteringVal);
-                                        }
-                                        tmpAccmltMeteringVal = accmltMeteringVal;
-                                    }
-                                    //정각이 아닐 때
-                                    else {
-                                        if(tmpAccmltMeteringVal != 0)
-                                            tmpAccmltMeteringVal += Double.parseDouble(meteringVal);
-                                    }
+                                    if(tmpAccmltMeteringVal != 0)
+                                        tmpAccmltMeteringVal += Double.parseDouble(meteringVal);
                                 }
                             }
 
@@ -265,11 +253,12 @@ public class KepcoAmiScheduler {
                     } catch (NullPointerException e) {
                         logger.error("minuteUseApiResponse - 15분 단위 전력소비 데이터 NullPointerException");
                         logger.error("고객 번호 : " + api.getCustNo() + " , AMI IDX : " + api.getAmiIdx());
+
                         JsonObject jsonObject = gson.fromJson(resultMessage, JsonObject.class);
                         JsonArray jsonArray = jsonObject.getAsJsonArray("dayLpDataInfoList");
                         jsonObject = gson.fromJson(jsonArray.get(0), JsonObject.class);
 
-                        String errMsg = jsonObject.get("errMsg").toString().replaceAll("\"", "");
+                        String  errMsg = jsonObject.get("errMsg").toString().replaceAll("\"", "");
 
                         //한전 시스템에 등록된 시점부터 데이터 조회가 가능함. -> 해당 날짜부터 데이터 조회하도록 처리.
                         if(resultMessage.contains("고객이 해당서비스에 정보제공 동의한 날짜부터 조회가 가능합니다.")) {
@@ -290,44 +279,23 @@ public class KepcoAmiScheduler {
                             kepcoAmiService.updateSingleApiResult(kepcoAmiVO);
                             break;
                         } else {
-                          //데이터가 존재하지 않을때, 에러메세지를 저장. (다음 날짜에 대한 조회는 진행)
+                          //데이터가 존재하지 않을때 (다음 날짜에 대한 조회는 진행)
                             logger.error(resultMessage);
 
-                            List<KepcoAmiVO> errorDataList = new ArrayList<>();
-                            noDataUpdateExist = true;
+                            KepcoAmiVO errorData = api;
+
+                            calendar2.add(Calendar.DATE, 1);
+
+                            requestSuccessDt = format.format(calendar2.getTimeInMillis());
                             Date compareDate = new Date(calendar2.getTimeInMillis());
 
-                            calendar2.set(Calendar.HOUR_OF_DAY, 0);
-                            calendar2.set(Calendar.MINUTE, 0);
-                            calendar2.set(Calendar.SECOND, 0);
-
-                            //하루 15분 단위 데이터 96개
-                            for (int j = 0; j < 96; j++) {
-
-                                KepcoAmiVO result = new KepcoAmiVO();
-
-                                result.setCustNo(api.getCustNo());
-                                result.setAmiIdx(api.getAmiIdx());
-                                result.setMeterNo(meterNo);
-
-                                calendar2.add(Calendar.MINUTE, 15);
-
-                                String meteringDate = format.format(calendar2.getTimeInMillis());
-                                result.setMeteringDate(meteringDate);
-                                result.setMeteringTime(timeFormat.format(calendar2.getTimeInMillis()));
-
-                                result.setApiCallResult(fail);
-                                result.setErrorResponseMsg(errMsg);
-                                errorDataList.add(result);
-                                requestSuccessDt = meteringDate;
-                            }
-
-                            kepcoAmiService.insertAmiErrorData(errorDataList);
+                            errorData.setMeteringDate(requestSuccessDt);
+                            errorData.setMeteringTime(timeFormat.format(calendar2.getTimeInMillis()));
 
                             //한전에서 누락된 데이터를 조회하는 기간(5일)이 초과되었을 경우. API 결과 테이블 +1일 (완전히 누락되는 데이터는 조회하지 않음)
                             if(((highPressureDate.getTime() - compareDate.getTime())/(24*60*60*1000)) > 5) {
-                                errorDataList.get(0).setRequestSuccessDt(errorDataList.get(0).getMeteringDate());
-                                kepcoAmiService.updateSingleApiResult(errorDataList.get(0));
+                                errorData.setRequestSuccessDt(errorData.getMeteringDate());
+                                kepcoAmiService.updateSingleApiResult(errorData);
                             }
                         }
                     } catch (HttpServerErrorException e) {
@@ -354,6 +322,7 @@ public class KepcoAmiScheduler {
      * 한전 계기번호 목록을 메모리에 저장하고 DB 고객정보와 비교, 매일 08시 44분에 실행
      **/
     //@Scheduled(cron = "0 44 8 * * *")
+    @Scheduled(cron = "0 9 21 * * *")
     public void saveKepcoAmiData() {
 
         logger.debug("==== 한전 계기 번호 Scheduler 실행 ====");
@@ -380,7 +349,7 @@ public class KepcoAmiScheduler {
                         HashMap<String, Object> parameter = new HashMap<>();
                         parameter.put("list", amiList);
                         //한전 API에서 가져온 AMI와 CEMS에 등록된 AMI 목록 비교
-                        amiList = kepcoAmiService.getRegisterAmi(parameter);
+                        amiList = kepcoAmiService.selectRegisterAmi(parameter);
                         logger.debug("==== 한전 계기 번호 데이터 호출 성공 ====");
                         break;
                     }
@@ -463,7 +432,7 @@ public class KepcoAmiScheduler {
         parameter.put("list", amiList);
         //한전 API에서 가져온 AMI와 CEMS에 등록된 AMI 목록 비교
         try {
-            amiList = kepcoAmiService.getRegisterAmi(parameter);
+            amiList = kepcoAmiService.selectRegisterAmi(parameter);
         } catch (Exception e) {
             e.printStackTrace();
         }
