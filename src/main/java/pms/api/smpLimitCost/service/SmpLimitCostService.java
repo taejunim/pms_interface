@@ -25,8 +25,8 @@ public class SmpLimitCostService {
     /**
      * 당일 등록된 SMP 계통 한계 가격 정보 개수 조회
      */
-    public int selectTodaySmpLimitCostCount() {
-        return smpLimitCostMapper.selectTodaySmpLimitCostCount();
+    public int selectTodaySmpLimitCostCount(String areaCd) {
+        return smpLimitCostMapper.selectTodaySmpLimitCostCount(areaCd);
     }
 
     /**

@@ -3,10 +3,11 @@
 
 <mapper namespace="pms.api.smpLimitCost.service.SmpLimitCostMapper">
     <!-- 당일 등록된 계통 한계 가격 있는지 조회 -->
-    <select id="selectTodaySmpLimitCostCount" resultType="int">
+    <select id="selectTodaySmpLimitCostCount" parameterType="String" resultType="int">
         SELECT COUNT(*) count
         FROM tb_smp_api
         WHERE trade_day = DATE_FORMAT(current_timestamp, '%Y%m%d')
+        AND area_cd = #{areaCd}
     </select>
     <!-- SMP 계통 한계 가격 조회 데이터 insert -->
     <insert id="insertSmpLimitCostData" parameterType="SmpLimitCostVO">

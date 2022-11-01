@@ -53,9 +53,9 @@ public class SmpLimitCostScheduler {
     //SMP 한국 전력 거래소 계통 한계 가격 조회 URL
     @Value("${smpLimitCost.api.url}")
     private String smpLimitCostApiUrl;
-    //SMP 한국 전력 거래소 계통 한계 가격 지역 코드 (제주)
-    @Value("${smpLimitCost.api.code.jeju}")
-    private String jejuCode;
+    //SMP 한국 전력 거래소 계통 한계 가격 지역 코드 (육지 : 1, 제주 : 9)
+    @Value("${smpLimitCost.api.code}")
+    private List<String> codeList;
 
     /**
      * saveSmpLimitCostData()
@@ -64,21 +64,21 @@ public class SmpLimitCostScheduler {
     //@Scheduled(cron = "30 0 0/1 * * *")
     public void saveSmpLimitCostData() {
 
-        if(smpLimitCostService.selectTodaySmpLimitCostCount() == 0) {
-            logger.debug("==== 한국 전력 거래소 계통 한계 가격 정보 Scheduler 실행 ====");
-            final HttpEntity entity = new HttpEntity(new HttpHeaders());
+        for(int i = 0; i < codeList.size(); i ++) {
+            if (smpLimitCostService.selectTodaySmpLimitCostCount(codeList.get(i)) == 0) {
+                logger.debug("==== 한국 전력 거래소 계통 한계 가격 정보 Scheduler 실행. areaCd : " + codeList.get(i) + " ====");
 
-            int i = 0;
-            while (i < 5) {
-                i++;
+                final HttpEntity entity = new HttpEntity(new HttpHeaders());
+
                 try {
-                    String fullSmpLimitCostApiUrl = smpLimitCostApiUrl + "?serviceKey=" + serviceKey + "&areaCd=" + jejuCode;
+                    String fullSmpLimitCostApiUrl = smpLimitCostApiUrl + "?serviceKey=" + serviceKey + "&areaCd=" + codeList.get(i);
                     URI smpLimitCostURI = new URI(fullSmpLimitCostApiUrl);
                     ResponseEntity<String> smpLimitCostApiResponse = restTemplate.exchange(smpLimitCostURI, HttpMethod.GET, entity, String.class);
 
                     if (smpLimitCostApiResponse.getStatusCode().equals(HttpStatus.OK)) {
                         //데이터 파싱용 Type 설정
-                        Type listType = new TypeToken<ArrayList<SmpLimitCostVO>>() {}.getType();
+                        Type listType = new TypeToken<ArrayList<SmpLimitCostVO>>() {
+                        }.getType();
                         String response = smpLimitCostApiResponse.getBody();
 
                         JsonObject jsonObject = gson.fromJson(String.valueOf(XML.toJSONObject(response)), JsonObject.class);
@@ -88,24 +88,23 @@ public class SmpLimitCostScheduler {
 
                         List<SmpLimitCostVO> apiResultBody = gson.fromJson(jsonObject.get("item").toString(), listType);
                         smpLimitCostService.insertSmpLimitCostData(apiResultBody);
-                        logger.debug("==== 한국 전력 거래소 계통 한계 가격 정보 호출 성공 ====");
-                        break;
-                        }
+                        logger.debug("==== 한국 전력 거래소 계통 한계 가격 정보 호출 성공. areaCd : " + codeList.get(i) + " ====");
+                    }
 
                 } catch (HttpServerErrorException e) {
-                    logger.error("한국 전력 거래소 계통 한계 가격 정보 수신 실패. 한국 전력 거래소 계통 한계 가격 정보 API 호출을 재시도 합니다.");
+                    logger.error("한국 전력 거래소 계통 한계 가격 정보 수신 실패. 한국 전력 거래소 계통 한계 가격 정보 API 호출을 재시도 합니다. areaCd : " + codeList.get(i));
                     logger.error(e.getLocalizedMessage());
                 } catch (ResourceAccessException e) {
-                    logger.error("한국 전력 거래소 계통 한계 가격 정보 호출시 TimeOut 발생. 한국 전력 거래소 계통 한계 가격 정보 API 호출을 재시도 합니다.");
+                    logger.error("한국 전력 거래소 계통 한계 가격 정보 호출시 TimeOut 발생. 한국 전력 거래소 계통 한계 가격 정보 API 호출을 재시도 합니다. areaCd : " + codeList.get(i));
                     logger.error(e.getLocalizedMessage());
                 } catch (JsonSyntaxException | ClassCastException e) {
-                    logger.error("customerApiResponseBody - 한국 전력 거래소 계통 한계 가격 정보 데이터 JsonSyntaxException | ClassCastException. 한국 전력 거래소 계통 한계 가격 정보 API 호출을 재시도 합니다.");
+                    logger.error("customerApiResponseBody - 한국 전력 거래소 계통 한계 가격 정보 데이터 JsonSyntaxException | ClassCastException. 한국 전력 거래소 계통 한계 가격 정보 API 호출을 재시도 합니다. areaCd : " + codeList.get(i));
                     logger.error(e.getLocalizedMessage());
                 } catch (Exception e) {
-                    logger.error("한국 전력 거래소 계통 한계 가격 정보 데이터 Exception 발생. 한국 전력 거래소 계통 한계 가격 정보 API 호출을 재시도 합니다.");
+                    logger.error("한국 전력 거래소 계통 한계 가격 정보 데이터 Exception 발생. 한국 전력 거래소 계통 한계 가격 정보 API 호출을 재시도 합니다. areaCd : " + codeList.get(i));
                     logger.error(e.getLocalizedMessage());
                 }
-            }
-        } else logger.debug("==== 해당 날짜에 한국 전력 거래소 계통 한계 가격 정보 존재 ====");
+            } else logger.debug("==== 해당 날짜에 한국 전력 거래소 계통 한계 가격 정보 존재. areaCd : " + codeList.get(i) + " ====");
+        }
     }
 }

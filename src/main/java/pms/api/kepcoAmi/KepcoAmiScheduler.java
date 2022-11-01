@@ -82,9 +82,8 @@ public class KepcoAmiScheduler {
      * getKepcoAmiData()
      * 한전 AMI 고객 List API 호출 하여 DB 고객정보와 비교
      * 유효한 고객 정보로 15분 단위 호출 후 저장
-     * 매 시간 40분에 실행
+     * 매 시간 정각 실행
      **/
-    //@Scheduled(cron = "30 * * * * *")
     //@Scheduled(cron = "0 0 0/1 * * *")
     public void getKepcoAmiData() throws URISyntaxException, ParseException {
         logger.debug("==== 한전 전력 소비 데이터 Scheduler 실행 ====");

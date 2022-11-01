@@ -23,7 +23,7 @@ public interface SmpLimitCostMapper {
      *
      * @return
      */
-    int selectTodaySmpLimitCostCount();
+    int selectTodaySmpLimitCostCount(String areaCd);
 
     /**
      * 오늘 계통 한계 가격 정보 insert
