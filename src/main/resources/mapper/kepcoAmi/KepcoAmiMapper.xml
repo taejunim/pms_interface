@@ -30,10 +30,30 @@
             IF(a.request_success_dt IS NULL,
                DATE_FORMAT(b.reg_dt,'%Y%m%d'),
                DATE_FORMAT(DATE_ADD(a.request_success_dt, INTERVAL 1 DAY),'%Y%m%d')) requestSuccessDt
-        FROM tb_kepco_api_result a,
-             tb_cnsmr b
-        WHERE a.kepco_cstmr_no = b.kepco_cstmr_no
-        AND   a.del_yn = 'N'
+        FROM (
+            SELECT kepco_cstmr_no, MIN(reg_dt) reg_dt
+            FROM (
+                (
+                    SELECT kepco_cstmr_no,
+                           reg_dt
+                    FROM tb_supler
+                    WHERE del_yn = 'N'
+                )
+            UNION
+                (
+                    SELECT kepco_cstmr_no,
+                           reg_dt
+                    FROM tb_cnsmr
+                    WHERE del_yn = 'N'
+                )
+            ) c
+            GROUP BY kepco_cstmr_no
+        ) b LEFT OUTER JOIN (
+            SELECT *
+            FROM tb_kepco_api_result
+            WHERE del_yn = 'N'
+        ) a ON a.kepco_cstmr_no = b.kepco_cstmr_no
+        WHERE 1 = 1
         AND (  a.request_success_dt != a.data_request_dt
             OR
               a.request_success_dt IS NULL
