@@ -80,7 +80,7 @@ public class ChargeDischargeSummaryController {
             chargeDischargeInsertVO.setMeteringTime(meteringTime);
 
             //충전 - 고정형
-            if (chargeDischargeSummaryVO.getChargeType().equals("chg") && chargeDischargeSummaryVO.getPositionFixYn().equals("fix")) {
+            if (chargeDischargeSummaryVO.getChargeType().equals("chg") && chargeDischargeSummaryVO.getPositionFixYn().equals("Y")) {
                 //15분 단위 데이터
                 if(timeFormatType.equals("HHmm"))
                     chargeDischargeSummaryService.insert15FixChargeData(chargeDischargeInsertVO);
@@ -92,7 +92,7 @@ public class ChargeDischargeSummaryController {
                 result.put("result", "Success");
             }
             //충전 - 이동형
-            else if (chargeDischargeSummaryVO.getChargeType().equals("chg") && chargeDischargeSummaryVO.getPositionFixYn().equals("mob")) {
+            else if (chargeDischargeSummaryVO.getChargeType().equals("chg") && chargeDischargeSummaryVO.getPositionFixYn().equals("N")) {
                 //15분 단위 데이터
                 if(timeFormatType.equals("HHmm"))
                     chargeDischargeSummaryService.insert15MobileChargeData(chargeDischargeInsertVO);
@@ -104,7 +104,7 @@ public class ChargeDischargeSummaryController {
                 result.put("result", "Success");
             }
             //방전 - 고정형
-            else if(chargeDischargeSummaryVO.getChargeType().equals("dis") && chargeDischargeSummaryVO.getPositionFixYn().equals("fix")) {
+            else if(chargeDischargeSummaryVO.getChargeType().equals("dis") && chargeDischargeSummaryVO.getPositionFixYn().equals("Y")) {
                 //15분 단위 데이터
                 if(timeFormatType.equals("HHmm"))
                     chargeDischargeSummaryService.insert15FixDischargeData(chargeDischargeInsertVO);
@@ -116,7 +116,7 @@ public class ChargeDischargeSummaryController {
                 result.put("result", "Success");
             }
             //방전 - 이동형
-            else if (chargeDischargeSummaryVO.getChargeType().equals("dis") && chargeDischargeSummaryVO.getPositionFixYn().equals("mob")) {
+            else if (chargeDischargeSummaryVO.getChargeType().equals("dis") && chargeDischargeSummaryVO.getPositionFixYn().equals("N")) {
                 //15분 단위 데이터
                 if(timeFormatType.equals("HHmm"))
                     chargeDischargeSummaryService.insert15MobileDischargeData(chargeDischargeInsertVO);

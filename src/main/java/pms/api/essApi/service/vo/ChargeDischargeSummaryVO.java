@@ -25,7 +25,7 @@ public class ChargeDischargeSummaryVO {
     private String accumulateAmount;
     @Schema(name = "chargeType", description = "충/방전 타입 chg / dis", example = "chg")
     private String chargeType;
-    @Schema(name = "positionFixYn", description = "고정형/이동형 구분 fix / mob", example = "fix")
+    @Schema(name = "positionFixYn", description = "고정형/이동형 구분 Y / N", example = "Y")
     private String positionFixYn;
     @Schema(name = "periodType", description = "기간(15분/60분/하루) 구분 (15/60/24H)", example = "15")
     private String periodType;
