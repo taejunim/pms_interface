@@ -177,6 +177,9 @@ public class WeatherScheduler {
                         }
                     }
                 }
+            } else {
+                logger.error("weatherApiResponse - 초단기 예보 데이터 데이터 이상");
+                logger.error(responseMessage);
             }
         } catch (NullPointerException | JsonSyntaxException | ClassCastException e) {
             logger.error("weatherApiResponse - 초단기 예보 데이터 JsonSyntaxException/ClassCastException/NullPointerException");
