@@ -72,6 +72,8 @@ public class WeatherScheduler {
     private String nx;
     @Value("${weather.api.forecast.ny}")
     private String ny;
+    @Value("${weather.api.forecast.noRainMessage}")
+    private String noRainMessage;
 
     //일몰 일출 API URL
     @Value("${weather.api.sun.url}")
@@ -103,7 +105,7 @@ public class WeatherScheduler {
      * 매 시간 10분에 날씨 관련 API 호출 하여 응답값 DB에 저장
      * 실제 반영 시에는 주석을 해제하여 반영
      **/
-    //@Scheduled(cron="0 10 0/1 * * *" )
+    @Scheduled(cron="0 10 0/1 * * *" )
     public void getWeatherData() throws URISyntaxException, UnsupportedEncodingException {
 
         logger.debug("날씨 Scheduler 실행 ====>");
@@ -149,7 +151,7 @@ public class WeatherScheduler {
                          *    T1H - 기온 (단위: ℃)
                          *    SKY - 하늘상태 (맑음, 구름많음, 흐림)
                          *    REH - 습도 (단위: %)
-                         *    PCP - 1시간 강수량
+                         *    RN1 - 1시간 강수량
                          *    WSD - 풍속 (단위: m/s)
                          */
                         if (indexItem.get("fcstTime").toString().contains(fcstTime)) {
@@ -165,8 +167,10 @@ public class WeatherScheduler {
                                 case "REH":
                                     weatherVO.setReh(indexItem.get("fcstValue").getAsString());
                                     break;
-                                case "PCP":
-                                    weatherVO.setRn1(Integer.parseInt(indexItem.get("fcstValue").toString().replace("\"", "")));
+                                case "RN1":
+                                    if(indexItem.get("fcstValue").toString().contains(noRainMessage))
+                                        weatherVO.setRn1(0);
+                                    else weatherVO.setRn1(Integer.parseInt(indexItem.get("fcstValue").toString().replace("\"", "")));
                                     break;
                                 case "WSD":
                                     weatherVO.setWsd(indexItem.get("fcstValue").toString().replace("\"", ""));
