@@ -21,10 +21,12 @@ public class PropertyEncryptDecrypt {
     //로그 설정
     private static final Logger logger = LoggerFactory.getLogger(PropertyEncryptDecrypt.class);
 
+    //docker container 내부 기본 경로
+    private static String filePath    = "webapps" + File.separator + "ROOT" + File.separator + "WEB-INF" + File.separator + "classes" + File.separator;
     //API 관련 properties
-    private static String apiFilePath = "." + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "interface.properties";
+    private static String apiFilePath = filePath + "interface.properties";
     //DB properties
-    private static String dbFilePath  = "." + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "application.properties";
+    private static String dbFilePath  = filePath + "application.properties";
 
     //암복호화 모듈 관련 변수
     public static IssacInitialize.Result initResult;
