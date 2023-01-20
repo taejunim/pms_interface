@@ -18,6 +18,7 @@ import pms.api.essApi.service.vo.ChargeDischargeInsertVO;
 import pms.api.essApi.service.vo.ChargeDischargeSummaryVO;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,16 +60,15 @@ public class ChargeDischargeSummaryController {
         Map<String,Object> result = new HashMap<>();
 
         try {
-            //unixTimestamp -> String 변환
-            long getMeteringDt = Long.parseLong(chargeDischargeSummaryVO.getMeteringDt());
-            Date meteringDt = new Date(getMeteringDt * 1000L);
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
-
             ChargeDischargeInsertVO chargeDischargeInsertVO = chargeDischargeSummaryService.getEssIdx(chargeDischargeSummaryVO);
             chargeDischargeInsertVO.setEssEquipId(chargeDischargeSummaryVO.getEssEquipId());
             chargeDischargeInsertVO.setChargeDischargeAmount(chargeDischargeSummaryVO.getChargeDischargeAmount());
             chargeDischargeInsertVO.setAccumulateAmount(chargeDischargeSummaryVO.getAccumulateAmount());
-            chargeDischargeInsertVO.setMeteringDate(dateFormat.format(meteringDt));
+
+            //unixTimestamp -> String 변환
+            long getMeteringDt = Long.parseLong(chargeDischargeSummaryVO.getMeteringDt());
+            Date meteringDt = new Date(getMeteringDt * 1000L);
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 
             String timeFormatType = "";
             //15분 단위 시간 형식
@@ -76,7 +76,19 @@ public class ChargeDischargeSummaryController {
             //한시간 단위 시간 형식
             else if (chargeDischargeSummaryVO.getPeriodType().equals("60")) timeFormatType = "HH";
             SimpleDateFormat timeFormat = new SimpleDateFormat(timeFormatType);
+
+            //자정은 24시로 담는다. 날짜는 전 날짜로.
             String meteringTime = timeFormat.format(meteringDt);
+
+            if(timeFormat.format(meteringDt).equals("00") || timeFormat.format(meteringDt).equals("0000")) {
+                meteringTime = meteringTime.replaceFirst("00", "24");
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(meteringDt);
+                calendar.add(Calendar.DATE, -1);
+                meteringDt = calendar.getTime();
+            }
+
+            chargeDischargeInsertVO.setMeteringDate(dateFormat.format(meteringDt));
             chargeDischargeInsertVO.setMeteringTime(meteringTime);
 
             //충전 - 고정형

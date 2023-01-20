@@ -170,7 +170,7 @@ public class WeatherScheduler {
                                 case "RN1":
                                     if(indexItem.get("fcstValue").toString().contains(noRainMessage))
                                         weatherVO.setRn1(0);
-                                    else weatherVO.setRn1(Integer.parseInt(indexItem.get("fcstValue").toString().replace("\"", "")));
+                                    else weatherVO.setRn1(Integer.parseInt(indexItem.get("fcstValue").toString().replace("\"", "").replace("mm","")));
                                     break;
                                 case "WSD":
                                     weatherVO.setWsd(indexItem.get("fcstValue").toString().replace("\"", ""));
