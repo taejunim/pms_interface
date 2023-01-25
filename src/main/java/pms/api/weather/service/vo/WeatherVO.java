@@ -23,7 +23,7 @@ public class WeatherVO {
     private int sky;            //하늘 상태
     private int temp;           //온도
     private String reh;         //습도
-    private int rn1;            //1시간 강수량
+    private String rn1;         //1시간 강수량
     private String wsd;         //풍속
     private String sunrise;     //일출 시간
     private String sunset;      //일몰 시간
