@@ -37,7 +37,7 @@ import javax.xml.bind.annotation.*;
 @XmlRootElement(name = "uid")
 public class Uid {
 
-    @XmlElement(required = true)
+    @XmlElement(namespace = "urn:ietf:params:xml:ns:icalendar-2.0", required = true)
     protected String text;
 
     /**

@@ -67,10 +67,11 @@ import javax.xml.bind.annotation.*;
 @XmlRootElement(name = "properties")
 public class Properties {
 
-    @XmlElement(required = true)
+    @XmlElement(namespace = "urn:ietf:params:xml:ns:icalendar-2.0", required = true)
     protected Dtstart dtstart;
-    @XmlElement(required = true)
+    @XmlElement(namespace = "urn:ietf:params:xml:ns:icalendar-2.0", required = true)
     protected DurationPropType duration;
+    @XmlElement(namespace = "urn:ietf:params:xml:ns:icalendar-2.0")
     protected Tolerance tolerance;
     @XmlElement(name = "x-eiNotification", namespace = "http://docs.oasis-open.org/ns/energyinterop/201110")
     protected DurationPropType xEiNotification;

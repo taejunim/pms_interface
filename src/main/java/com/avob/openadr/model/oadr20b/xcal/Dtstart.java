@@ -38,7 +38,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 @XmlRootElement(name = "dtstart")
 public class Dtstart {
 
-    @XmlElement(name = "date-time", required = true)
+    @XmlElement(namespace = "urn:ietf:params:xml:ns:icalendar-2.0", name = "date-time", required = true)
     @XmlSchemaType(name = "dateTime")
     protected XMLGregorianCalendar dateTime;
 

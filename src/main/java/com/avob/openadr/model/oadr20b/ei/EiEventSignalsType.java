@@ -43,7 +43,7 @@ import java.util.List;
 })
 public class EiEventSignalsType {
 
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected List<EiEventSignalType> eiEventSignal;
     protected EiEventBaselineType eiEventBaseline;
 

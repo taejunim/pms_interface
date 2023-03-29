@@ -43,7 +43,7 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class WsCalendarIntervalType {
 
-    @XmlElement(required = true)
+    @XmlElement(namespace = "urn:ietf:params:xml:ns:icalendar-2.0", required = true)
     protected Properties properties;
 
     /**

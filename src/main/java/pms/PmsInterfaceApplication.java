@@ -7,7 +7,8 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import pms.api.common.PropertyEncryptDecrypt;
-import pms.api.holiday.HolidayScheduler;
+import pms.api.dr.DrConfig;
+import pms.api.dr.openadr.OadrHttpClient20b;
 
 import java.net.URISyntaxException;
 
@@ -16,6 +17,7 @@ import java.net.URISyntaxException;
 @PropertySource(value = "classpath:interface.properties", encoding = "UTF-8")
 public class PmsInterfaceApplication {
 
+    public OadrHttpClient20b oadrHttpClient = new DrConfig().initOadrHttpClient20b();
     public static void main(String[] args) {
         SpringApplication.run(PmsInterfaceApplication.class, args);
     }

@@ -180,7 +180,7 @@ public class Oadr20bFactory {
 
 	public static OadrPayload createOadrPayload(String id, Object value) {
 		OadrSignedObject createOadrSignedObject = factory.createOadrSignedObject();
-		createOadrSignedObject.setId(id);
+		//createOadrSignedObject.setId(id);
 
 		if (value instanceof OadrDistributeEventType) {
 			createOadrSignedObject.setOadrDistributeEvent((OadrDistributeEventType) value);
@@ -424,7 +424,7 @@ public class Oadr20bFactory {
 		OadrRegisterReportType createOadrRegisterReportType = factory.createOadrRegisterReportType();
 		createOadrRegisterReportType.setRequestID(requestId);
 		createOadrRegisterReportType.setVenID(venId);
-		createOadrRegisterReportType.setReportRequestID("0");
+		//createOadrRegisterReportType.setReportRequestID("0");
 		return createOadrRegisterReportType;
 	}
 
@@ -478,7 +478,7 @@ public class Oadr20bFactory {
 				.createOadrCreatePartyRegistrationType();
 		createOadrCreatePartyRegistrationType.setRequestID(requestId);
 		//createOadrCreatePartyRegistrationType.setVenID(venId);
-		createOadrCreatePartyRegistrationType.setOadrVenName(venId);
+		//createOadrCreatePartyRegistrationType.setOadrVenName(venId);
 		createOadrCreatePartyRegistrationType.setOadrProfileName(profilName);
 		createOadrCreatePartyRegistrationType.setOadrHttpPullModel(true);
 		createOadrCreatePartyRegistrationType.setOadrReportOnly(false);
@@ -584,6 +584,10 @@ public class Oadr20bFactory {
 			String reportrequestId, ReportNameEnumeratedType reportName, long createdTimestamp, Long startTimestamp,
 			String duration) {
 		OadrReportType createOadrReportType = factory.createOadrReportType();
+
+		//태준 추가
+		createOadrReportType.setEiReportID(reportId);
+
 		createOadrReportType.setReportRequestID(reportrequestId);
 		createOadrReportType.setReportSpecifierID(reportSpecifierId);
 		if (reportName != null) {
@@ -1286,6 +1290,7 @@ public class Oadr20bFactory {
 		createReportPayloadType.setConfidence(confidence);
 		createReportPayloadType.setAccuracy(accuracy);
 		createReportPayloadType.setPayloadBase(Oadr20bFactory.createPayloadFloat(value));
+		createReportPayloadType.setOadrDataQuality("Quality Good - Non Specific");
 		return createReportPayloadType;
 	}
 

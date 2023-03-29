@@ -43,8 +43,9 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class EiResponseType {
 
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected String responseCode;
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected String responseDescription;
     @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110/payloads", required = true)
     protected String requestID;

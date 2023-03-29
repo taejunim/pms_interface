@@ -41,7 +41,7 @@ import javax.xml.bind.annotation.*;
 @XmlRootElement(name = "eiRequestEvent")
 public class EiRequestEvent {
 
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110/payloads", required = true)
     protected String requestID;
     @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected String venID;

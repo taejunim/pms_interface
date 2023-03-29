@@ -53,14 +53,15 @@ import java.util.List;
 })
 public class ReportSpecifierType {
 
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected String reportSpecifierID;
     @XmlElement(namespace = "urn:ietf:params:xml:ns:icalendar-2.0", required = true)
     protected DurationPropType granularity;
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected DurationPropType reportBackDuration;
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110")
     protected WsCalendarIntervalType reportInterval;
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected List<SpecifierPayloadType> specifierPayload;
 
     /**

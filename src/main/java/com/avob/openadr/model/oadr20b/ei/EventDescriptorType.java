@@ -65,24 +65,27 @@ import javax.xml.datatype.XMLGregorianCalendar;
 })
 public class EventDescriptorType {
 
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected String eventID;
-    @XmlSchemaType(name = "unsignedInt")
+    @XmlSchemaType(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", name = "unsignedInt")
     protected long modificationNumber;
-    @XmlSchemaType(name = "dateTime")
+    @XmlSchemaType(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", name = "dateTime")
     protected XMLGregorianCalendar modificationDateTime;
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110")
     protected String modificationReason;
-    @XmlSchemaType(name = "unsignedInt")
+    @XmlSchemaType(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", name = "unsignedInt")
     protected Long priority;
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected EiMarketContext eiMarketContext;
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     @XmlSchemaType(name = "dateTime")
     protected XMLGregorianCalendar createdDateTime;
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     @XmlSchemaType(name = "token")
     protected EventStatusEnumeratedType eventStatus;
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110")
     protected String testEvent;
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110")
     protected String vtnComment;
 
     /**

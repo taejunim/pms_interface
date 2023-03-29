@@ -50,9 +50,9 @@ public abstract class EnergyItemType
     extends ItemBaseType
 {
 
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/emix/2011/06/power", required = true)
     protected String itemDescription;
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/emix/2011/06/power", required = true)
     protected String itemUnits;
     @XmlElement(namespace = "http://docs.oasis-open.org/ns/emix/2011/06/siscale", required = true)
     protected String siScaleCode;

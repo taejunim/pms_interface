@@ -56,15 +56,16 @@ public class EiEventSignalType {
     @XmlElement(namespace = "urn:ietf:params:xml:ns:icalendar-2.0:stream", required = true)
     protected Intervals intervals;
     protected EiTargetType eiTarget;
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected String signalName;
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     @XmlSchemaType(name = "token")
     protected SignalTypeEnumeratedType signalType;
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected String signalID;
     @XmlElementRef(name = "itemBase", namespace = "http://docs.oasis-open.org/ns/emix/2011/06", type = JAXBElement.class, required = false)
     protected JAXBElement<? extends ItemBaseType> itemBase;
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110")
     protected CurrentValueType currentValue;
 
     /**

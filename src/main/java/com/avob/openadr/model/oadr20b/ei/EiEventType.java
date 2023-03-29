@@ -45,13 +45,13 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class EiEventType {
 
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected EventDescriptorType eventDescriptor;
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected EiActivePeriodType eiActivePeriod;
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected EiEventSignalsType eiEventSignals;
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected EiTargetType eiTarget;
 
     /**

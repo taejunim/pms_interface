@@ -12,6 +12,8 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -29,6 +31,7 @@ import java.util.UUID;
  */
 public class OadrHttpClient20b {
 
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private OadrHttpClient client;
 
 	/**
@@ -87,7 +90,6 @@ public class OadrHttpClient20b {
 	public <T, I extends JAXBElement<?>> T post(I payload, String path, Class<T> responseKlass) throws Oadr20bException,
 			Oadr20bHttpLayerException, Oadr20bXMLSignatureException, Oadr20bXMLSignatureValidationException {
 
-		//return this.post(null, path, null, payload, responseKlass);
 		return this.post(Oadr20bUrlPath.OADR_BASE_HOST, path, null, payload, responseKlass);
 	}
 
@@ -115,10 +117,12 @@ public class OadrHttpClient20b {
 				marshal = jaxbContext.marshal(payload, validateXmlPayload);
 			}
 
+			logger.info("---------------------------------------------------------------\nVEN Request ->\n" + marshal);
+
 			StringEntity stringEntity = new StringEntity(marshal, "utf-8");
 
 			post.setEntity(stringEntity);
-			//HttpResponse response = client.execute(post, host, Oadr20bUrlPath.OADR_BASE_PATH + path, context);
+
 			HttpResponse response = client.execute(post, host, path, context);
 
 			// if request did not result in 200 http code throw exception
@@ -146,7 +150,7 @@ public class OadrHttpClient20b {
 			} else {
 				String resp = EntityUtils.toString(response.getEntity(), "UTF-8");
 
-				System.out.println("---------------------------------------------------------------\nVTN Response ->\n" + resp);
+				logger.info("---------------------------------------------------------------\nVTN Response ->\n" + resp);
 				return jaxbContext.unmarshal(resp, responseKlass, validateXmlPayload);
 			}
 

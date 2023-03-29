@@ -10,6 +10,7 @@ package com.avob.openadr.model.oadr20b.ei;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 
@@ -42,6 +43,7 @@ public class PayloadFloatType
     extends PayloadBaseType
 {
 
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110")
     protected float value;
 
     /**

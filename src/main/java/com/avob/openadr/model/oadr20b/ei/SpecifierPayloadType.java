@@ -46,11 +46,11 @@ import javax.xml.bind.annotation.*;
 })
 public class SpecifierPayloadType {
 
-    @XmlElement(name = "rID", required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", name = "rID", required = true)
     protected String rid;
     @XmlElementRef(name = "itemBase", namespace = "http://docs.oasis-open.org/ns/emix/2011/06", type = JAXBElement.class, required = false)
     protected JAXBElement<? extends ItemBaseType> itemBase;
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected String readingType;
 
     /**

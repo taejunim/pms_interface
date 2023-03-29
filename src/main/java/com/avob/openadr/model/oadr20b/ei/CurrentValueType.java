@@ -10,6 +10,7 @@ package com.avob.openadr.model.oadr20b.ei;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 
@@ -38,6 +39,7 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class CurrentValueType {
 
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110")
     protected PayloadFloatType payloadFloat;
 
     /**
