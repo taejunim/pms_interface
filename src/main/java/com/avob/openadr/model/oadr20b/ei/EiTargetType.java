@@ -83,7 +83,7 @@ public class EiTargetType {
     protected List<ServiceLocationType> serviceLocation;
     @XmlElement(namespace = "http://docs.oasis-open.org/ns/emix/2011/06/power")
     protected List<TransportInterfaceType> transportInterface;
-    @XmlElement(namespace = "http://docs.oasis-open.org/ns/emix/2011/06/power")
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110")
     protected List<String> groupID;
     @XmlElement(namespace = "http://docs.oasis-open.org/ns/emix/2011/06/power")
     protected List<String> groupName;

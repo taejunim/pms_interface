@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pms.api.dr.service.DrMapper">
+
+    <select id="selectDrBusinessId" resultType="java.lang.String">
+
+        SELECT DRBUSINESSID AS drBusinessId
+        FROM t_config
+                 LIMIT 1
+
+    </select>
+
+    <select id="selectDrBase" parameterType="java.lang.String" resultType="DrBaseVO">
+
+        SELECT DRBUSINESSID AS drBusinessId
+             , DRVENID AS drVenId
+             , DRREGISTRATIONID AS drRegistrationId
+        FROM t_config
+        WHERE DRBUSINESSID = #{drBusinessId}
+
+    </select>
+
+    <!-- VEN 아이디, DR 등록 아이디 등록 -->
+    <update id="createPartyRegistration" parameterType="DrBaseVO">
+        UPDATE t_config
+        SET DRVENID = #{drVenId}
+            , DRREGISTRATIONID = #{drRegistrationId}
+        WHERE DRBUSINESSID = #{drBusinessId}
+    </update>
+
+    <!-- VEN 아이디, DR 등록 아이디 해제 -->
+    <update id="cancelPartyRegistration" parameterType="java.lang.String">
+        UPDATE t_config
+        SET DRVENID = ''
+          , DRREGISTRATIONID = ''
+        WHERE DRBUSINESSID = #{drBusinessId}
+    </update>
+
+    <delete id="deleteReportList">
+        truncate tb_dr_report_api
+    </delete>
+
+    <insert id="insertReportList" parameterType="java.util.List">
+
+        INSERT INTO tb_dr_report_api (
+        dr_business_id
+        , kepco_cstmr_no
+        , report_reqst_id
+        , reg_dt
+        , report_unit
+        , report_cycle
+        , report_start_dt
+        , report_cntnc_pd
+        )
+        VALUES
+        <foreach collection="list" item="item" separator=" , ">
+            (
+            '${item.drBusinessId}'
+            , '${item.kepcoCstmrNo}'
+            , '${item.reportReqstId}'
+            , NOW()
+            , '${item.reportUnit}'
+            , '${item.reportCycle}'
+            , '${item.reportStartDt}'
+            , '${item.reportCntncPd}'
+            )
+        </foreach>
+
+    </insert>
+
+    <!-- DR 참여중인 한전고객번호 리스트 -->
+    <select id="selectRId" resultType="java.lang.String">
+
+        SELECT kepco_cstmr_no
+        FROM (
+              SELECT s.supler_idx     AS idx
+                   , s.kepco_cstmr_no AS kepco_cstmr_no
+              FROM tb_supler s
+
+              UNION
+
+              SELECT c.cnsmr_idx      AS idx
+                   , c.kepco_cstmr_no AS kepco_cstmr_no
+              FROM tb_cnsmr c) a
+        WHERE a.idx IN (SELECT a.idx
+                        FROM (SELECT CASE
+                                         WHEN x = 1 THEN supler_idx
+                                         WHEN x = 2 THEN cnsmr_idx
+                                     END idx
+                              FROM (
+                                        (SELECT supler_idx
+                                              , cnsmr_idx
+                                         FROM tb_ctrt
+                                         WHERE ctrt_idx IN (SELECT ctrt_idx
+                                                            FROM tb_dr_ctrt)
+                                         AND del_yn = 'N'
+                                         AND DATE_FORMAT(NOW(), '%Y-%m-%d') <![CDATA[>=]]> ctrt_start_date
+                                         AND DATE_FORMAT(NOW(), '%Y-%m-%d') <![CDATA[<=]]> ctrt_end_date) a
+                                        ,
+                                        (SELECT 1 AS x
+                                         UNION ALL
+                                         SELECT 2 AS x) b
+                                    )
+                             ) a
+                        WHERE a.idx != ''
+                       )
+        ORDER BY kepco_cstmr_no
+    </select>
+
+    <insert id="updateDrEvent" parameterType="DrEventVO" >
+
+        INSERT INTO tb_dr_issue_api (
+                                     reg_dt
+                                   , reg_id
+                                   , issue_date
+                                   , issue_hhmm
+                                   , end_hhmm
+                                   , cntnc_hh
+                                   , kpx_dr_rsc_id
+                                   , event_id
+                                   , event_sttus_cd
+                                   , uid
+        )
+        VALUES (
+                NOW()
+                , 'admin'
+                , #{issueDate}
+                , #{issueHhmm}
+                , #{endHhmm}
+                , #{cntncHh}
+                , #{kpxDrRscId}
+                , #{eventId}
+                , #{eventSttusCd}
+                , #{uid}
+               )
+        ON DUPLICATE KEY UPDATE
+            reg_dt = NOW()
+            , event_sttus_cd = #{eventSttusCd}
+
+    </insert>
+
+</mapper>
