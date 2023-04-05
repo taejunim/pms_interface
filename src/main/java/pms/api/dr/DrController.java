@@ -32,6 +32,7 @@ public class DrController {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private SimpleDateFormat simpleDateFormat = new SimpleDateFormat(FORMAT_UTC);
+    private SimpleDateFormat simpleDateFormatDefault = new SimpleDateFormat(FORMAT_DEFAULT);
 
     PmsInterfaceApplication app = new PmsInterfaceApplication();
 
@@ -54,6 +55,8 @@ public class DrController {
             logger.info("VTN ->");
             logger.info(String.valueOf(oadrPayload));
             logger.info("---------------------------------------------------");
+
+            //oadrCreatedEvent("evt_61078ea2-ca4d-42d6-bd3c-e6acd8c58479", 0,  200);
 
         } catch (Oadr20bException e) {
             throw new RuntimeException(e);
@@ -398,7 +401,7 @@ public class DrController {
     @Scheduled(cron="0/60 * * * * *")
     @RequestMapping("/oadrPoll")
     public void oadrPoll() {
-        logger.info("[ oadrPoll Start - " + simpleDateFormat.format(new Date()) + " ]");
+        logger.info("[ oadrPoll Start - " + simpleDateFormatDefault.format(new Date()) + " ]");
 
         getDrBase();
 
@@ -411,7 +414,7 @@ public class DrController {
 
                 OadrPayload oadrPayload = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.OADR_POLL_SERVICE, OadrPayload.class);
 
-                parseEvent(oadrPayload);
+                parseEvent(oadrPayload, "oadrPoll");
 
             } catch (Oadr20bException e) {
                 throw new RuntimeException(e);
@@ -444,7 +447,7 @@ public class DrController {
 
                 OadrPayload oadrPayload = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.EI_EVENT_SERVICE, OadrPayload.class);
 
-                parseEvent(oadrPayload);
+                parseEvent(oadrPayload, "oadrRequestEvent");
 
             } catch (Oadr20bException e) {
                 throw new RuntimeException(e);
@@ -462,7 +465,7 @@ public class DrController {
         }
     }
 
-    private void parseEvent(OadrPayload oadrPayload) {
+    private void parseEvent(OadrPayload oadrPayload, String apiType) {
         logger.info("---------------------------------------------------");
         logger.info("VTN ->");
 
@@ -500,6 +503,7 @@ public class DrController {
 
                     drEventVO.setEventId(oadrEventList.get(i).getEiEvent().getEventDescriptor().getEventID());
                     drEventVO.setEventSttusCd(oadrEventList.get(i).getEiEvent().getEventDescriptor().getEventStatus().value());
+                    drEventVO.setModificationNumber(oadrEventList.get(i).getEiEvent().getEventDescriptor().getModificationNumber());
 
                     String startTime = String.valueOf(oadrEventList.get(i).getEiEvent().getEiActivePeriod().getProperties().getDtstart().getDateTime());
 
@@ -579,6 +583,14 @@ public class DrController {
                     }
                 }
 
+                /**
+                 * Poll 할 때만 참여/미참여 응답 보냄
+                 * 일단, 무조건 참여로 응답함
+                 * */
+                if (apiType.equals("oadrPoll")) {
+                    oadrCreatedEvent(drEventVO.getEventId(), drEventVO.getModificationNumber(), 200);
+                }
+
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -596,9 +608,38 @@ public class DrController {
         logger.info("---------------------------------------------------");
     }
 
-    private void oadrCreatedEvent() {
+    private void oadrCreatedEvent(String eventId, long modificationNumber, int responseCode) {
 
-        //OadrCreatedEventType oadrCreatedEventType = Oadr20bEiEventBuilders.newOadr20bCreatedEventEventResponseBuilder().build();
+        try {
+            EiResponseType eiResponseType = Oadr20bResponseBuilders.newOadr20bEiResponseBuilder("", responseCode).build();
+
+            EventResponses.EventResponse eventResponse = Oadr20bEiEventBuilders
+                    .newOadr20bCreatedEventEventResponseBuilder(eventId, modificationNumber, DR_CREATED_EVENT_ID + UUID.randomUUID(), responseCode, OptTypeType.OPT_IN).build();
+
+            OadrCreatedEventType oadrCreatedEventType = Oadr20bEiEventBuilders.newCreatedEventBuilder(eiResponseType, app.drVenId).addEventResponse(eventResponse).build();
+
+            OadrPayload requestData = Oadr20bFactory.createOadrPayload("", oadrCreatedEventType);
+
+            OadrPayload oadrPayload = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.EI_EVENT_SERVICE, OadrPayload.class);
+
+            logger.info("---------------------------------------------------");
+            logger.info(" [ oadrCreatedEvent ] ");
+            logger.info("VTN ->");
+            logger.info("ResponseCode : " + oadrPayload.getOadrSignedObject().getOadrResponse().getEiResponse().getResponseCode());
+            logger.info("ResponseDescription : " + oadrPayload.getOadrSignedObject().getOadrResponse().getEiResponse().getResponseDescription());
+            logger.info("RequestID : " + oadrPayload.getOadrSignedObject().getOadrResponse().getEiResponse().getRequestID());
+            logger.info("VenID : " + oadrPayload.getOadrSignedObject().getOadrResponse().getVenID());
+            logger.info("---------------------------------------------------");
+        } catch (Oadr20bException e) {
+            throw new RuntimeException(e);
+        } catch (Oadr20bHttpLayerException e) {
+            throw new RuntimeException(e);
+        } catch (Oadr20bXMLSignatureException e) {
+            throw new RuntimeException(e);
+        } catch (Oadr20bXMLSignatureValidationException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     public void getDrBase() {

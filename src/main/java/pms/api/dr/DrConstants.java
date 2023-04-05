@@ -22,6 +22,7 @@ public class DrConstants {
     public static final String DR_REPORT_ID = "report_";
     public static final String DR_REPORT_REQUEST_ID = "reportRequest_";
     public static final String DR_UPDATE_REPORT_ID = "updateReport_";
+    public static final String DR_CREATED_EVENT_ID = "createdEvent_";
 
     public static final String FORMAT_DEFAULT = "yyyy-MM-dd HH:mm:ss";
     public static final String FORMAT_UTC = "yyyy-MM-dd'T'HH:mm:ss'Z'";
