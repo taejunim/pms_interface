@@ -41,22 +41,19 @@ public class DrController {
 
     @RequestMapping("/sslTest")
     private void sslTest() {
+        logger.info("---------------------------------------------------");
+        logger.info(" [ OadrQueryRegistration ] ");
 
         try {
+
             String requestID = "queryRegistration_" + UUID.randomUUID();
             OadrQueryRegistrationType oadrQueryRegistrationType = Oadr20bEiRegisterPartyBuilders.newOadr20bQueryRegistrationBuilder(requestID).build();
 
             OadrPayload requestData = Oadr20bFactory.createOadrPayload("", oadrQueryRegistrationType);
 
-            OadrPayload oadrPayload = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.EI_REGISTER_PARTY_SERVICE, OadrPayload.class);
+            app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.EI_REGISTER_PARTY_SERVICE, OadrPayload.class);
 
             logger.info("---------------------------------------------------");
-            logger.info(" [ OadrQueryRegistration ] ");
-            logger.info("VTN ->");
-            logger.info(String.valueOf(oadrPayload));
-            logger.info("---------------------------------------------------");
-
-            //oadrCreatedEvent("evt_61078ea2-ca4d-42d6-bd3c-e6acd8c58479", 0,  200);
 
         } catch (Oadr20bException e) {
             throw new RuntimeException(e);
@@ -73,6 +70,8 @@ public class DrController {
 
     @RequestMapping("/createPartyRegistration")
     private void createPartyRegistration() {
+        logger.info("---------------------------------------------------");
+        logger.info(" [ createPartyRegistration ] ");
 
         try {
             getDrBase();
@@ -89,21 +88,6 @@ public class DrController {
             OadrPayload requestData = Oadr20bFactory.createOadrPayload("", oadrCreatePartyRegistrationType);
 
             OadrPayload oadrPayload = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.EI_REGISTER_PARTY_SERVICE, OadrPayload.class);
-
-            logger.info("---------------------------------------------------");
-            logger.info(" [ createPartyRegistration ] ");
-            logger.info("VTN ->");
-            logger.info("ResponseCode : " + oadrPayload.getOadrSignedObject().getOadrCreatedPartyRegistration().getEiResponse().getResponseCode());
-            logger.info("ResponseDescription : " + oadrPayload.getOadrSignedObject().getOadrCreatedPartyRegistration().getEiResponse().getResponseDescription());
-            logger.info("RequestID : " + oadrPayload.getOadrSignedObject().getOadrCreatedPartyRegistration().getEiResponse().getRequestID());
-            logger.info("RegistrationID : " + oadrPayload.getOadrSignedObject().getOadrCreatedPartyRegistration().getRegistrationID());
-            logger.info("VenID : " + oadrPayload.getOadrSignedObject().getOadrCreatedPartyRegistration().getVenID());
-            logger.info("VtnID : " + oadrPayload.getOadrSignedObject().getOadrCreatedPartyRegistration().getVtnID());
-            logger.info("OadrProfileName : " + oadrPayload.getOadrSignedObject().getOadrCreatedPartyRegistration().getOadrProfiles().getOadrProfile().get(0).getOadrProfileName());
-            logger.info("OadrTransportName : " + oadrPayload.getOadrSignedObject().getOadrCreatedPartyRegistration().getOadrProfiles().getOadrProfile().get(0)
-                    .getOadrTransports().getOadrTransport().get(0).getOadrTransportName());
-            logger.info("Duration : " + oadrPayload.getOadrSignedObject().getOadrCreatedPartyRegistration().getOadrRequestedOadrPollFreq().getDuration());
-            logger.info("---------------------------------------------------");
 
             /**
             * DB 에 VEN 아이디, DR 등록 아이디 등록
@@ -139,6 +123,8 @@ public class DrController {
 
             getDrBase();
 
+            logger.info("---------------------------------------------------");
+
         } catch (Oadr20bException e) {
             throw new RuntimeException(e);
         } catch (Oadr20bHttpLayerException e) {
@@ -154,12 +140,11 @@ public class DrController {
 
     @RequestMapping("/cancelRegistration")
     private void cancelRegistration() {
+        logger.info("---------------------------------------------------");
+        logger.info(" [ OadrCancelPartyRegistration ] ");
 
         try {
             getDrBase();
-
-            logger.info("drRegistrationId : " + app.drBaseVO.drRegistrationId);
-            logger.info("drVenId : " + app.drBaseVO.drVenId);
 
             OadrCancelPartyRegistrationType oadrCancelPartyRegistrationType = Oadr20bEiRegisterPartyBuilders.newOadr20bCancelPartyRegistrationBuilder(
                     DR_CANCEL_PARTY_REGISTRATION_ID + UUID.randomUUID(), app.drBaseVO.drRegistrationId, app.drBaseVO.drVenId).build();
@@ -167,16 +152,6 @@ public class DrController {
             OadrPayload requestData = Oadr20bFactory.createOadrPayload("", oadrCancelPartyRegistrationType);
 
             OadrPayload oadrPayload = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.EI_REGISTER_PARTY_SERVICE, OadrPayload.class);
-
-            logger.info("---------------------------------------------------");
-            logger.info(" [ OadrCancelPartyRegistration ] ");
-            logger.info("VTN ->");
-            logger.info("ResponseCode : " + oadrPayload.getOadrSignedObject().getOadrCanceledPartyRegistration().getEiResponse().getResponseCode());
-            logger.info("ResponseDescription : " + oadrPayload.getOadrSignedObject().getOadrCanceledPartyRegistration().getEiResponse().getResponseDescription());
-            logger.info("RequestID : " + oadrPayload.getOadrSignedObject().getOadrCanceledPartyRegistration().getEiResponse().getRequestID());
-            logger.info("RegistrationID : " + oadrPayload.getOadrSignedObject().getOadrCanceledPartyRegistration().getRegistrationID());
-            logger.info("VenID : " + oadrPayload.getOadrSignedObject().getOadrCanceledPartyRegistration().getVenID());
-            logger.info("---------------------------------------------------");
 
             /**
              * DB 에 VEN 아이디, DR 등록 아이디 해제
@@ -198,6 +173,8 @@ public class DrController {
                 logger.info(" [ DR 해제 Error ] ");
             }
 
+            logger.info("---------------------------------------------------");
+
         } catch (Oadr20bException e) {
             throw new RuntimeException(e);
         } catch (Oadr20bHttpLayerException e) {
@@ -212,19 +189,18 @@ public class DrController {
     }
 
     private int registerReport(DrBaseVO drBaseVO, List<String> rIdList) {
+        logger.info("---------------------------------------------------");
+        logger.info(" [ OadrRegisterReport ] ");
 
         int insertCount = 0;
 
         try {
             getDrBase();
 
-            int deleteCount = drService.deleteReportList();
-
-            logger.info(" [ 삭제된 레포트 개수 : "+deleteCount+" ] ");
-            logger.info(" [ rIdList : "+rIdList.size()+" ] ");
+            drService.deleteReportList();
 
             for (int r=0; r<rIdList.size(); r++) {
-                logger.info("---------------------- "+(r+1)+" : "+rIdList.get(r)+" --------------------------");
+
                 OadrReportType build = Oadr20bEiReportBuilders.newOadr20bRegisterReportOadrReportBuilder(DR_REPORT_SPECIFIER_ID, ReportNameEnumeratedType.METADATA_TELEMETRY_USAGE, System.currentTimeMillis())
                         .addReportDescription(Oadr20bEiReportBuilders
                                 .newOadr20bOadrReportDescriptionBuilder(rIdList.get(r), ReportEnumeratedType.USAGE, ReadingTypeEnumeratedType.DIRECT_READ)
@@ -240,12 +216,6 @@ public class DrController {
                 OadrPayload oadrPayload = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.EI_REPORT_SERVICE, OadrPayload.class);
 
                 Thread.sleep(1000);
-
-                logger.info(" [ OadrRegisterReport ] ");
-                logger.info("VTN ->");
-                logger.info("ResponseCode : " + oadrPayload.getOadrSignedObject().getOadrRegisteredReport().getEiResponse().getResponseCode());
-                logger.info("ResponseDescription : " + oadrPayload.getOadrSignedObject().getOadrRegisteredReport().getEiResponse().getResponseDescription());
-                logger.info("RequestID : " + oadrPayload.getOadrSignedObject().getOadrRegisteredReport().getEiResponse().getRequestID());
 
                 List<OadrReportRequestType> oadrReportRequestTypeList = oadrPayload.getOadrSignedObject().getOadrRegisteredReport().getOadrReportRequest();
 
@@ -264,30 +234,10 @@ public class DrController {
                     drReportVO.setReportStartDt(utcToLocaltime(oadrReportRequestTypeList.get(i).getReportSpecifier().getReportInterval().getProperties().getDtstart().getDateTime().toString(), FORMAT_DEFAULT));
                     drReportVO.setReportCntncPd(oadrReportRequestTypeList.get(i).getReportSpecifier().getReportInterval().getProperties().getDuration().getDuration());
 
-                    logger.info("-------------------- "+ (i+1) +" ----------------------------");
-                    logger.info("ReportRequestID : " + oadrReportRequestTypeList.get(i).getReportRequestID());
-                    logger.info("ReportSpecifierID : " + oadrReportRequestTypeList.get(i).getReportSpecifier().getReportSpecifierID());
-                    logger.info("getGranularity().getDuration() : " + oadrReportRequestTypeList.get(i).getReportSpecifier().getGranularity().getDuration());
-                    logger.info("getReportBackDuration().getDuration() : " + oadrReportRequestTypeList.get(i).getReportSpecifier().getReportBackDuration().getDuration());
-                    logger.info("getReportInterval().getProperties().getDtstart().getDateTime() : " + oadrReportRequestTypeList.get(i).getReportSpecifier().getReportInterval().getProperties().getDtstart().getDateTime());
-                    logger.info("getReportInterval().getProperties().getDuration().getDuration() : " + oadrReportRequestTypeList.get(i).getReportSpecifier().getReportInterval().getProperties().getDuration().getDuration());
-
-                    List<SpecifierPayloadType> specifierPayloadTypeList = oadrReportRequestTypeList.get(i).getReportSpecifier().getSpecifierPayload();
-
-                    for (int j=0; j<specifierPayloadTypeList.size(); j++) {
-                        logger.info("RID : " + specifierPayloadTypeList.get(j).getRID());
-                        logger.info("ReadingType : " + specifierPayloadTypeList.get(j).getReadingType());
-                    }
-
                     reportRequestIDList.add(oadrReportRequestTypeList.get(i).getReportRequestID());
 
                     drReportVOArrayList.add(drReportVO);
-
-                    logger.info("---------------------------------------------------");
                 }
-
-                logger.info("VenID : " + oadrPayload.getOadrSignedObject().getOadrRegisteredReport().getVenID());
-                logger.info("---------------------------------------------------");
 
                 //oadrCreatedReport Message 송신
                 //금회에 수신한 내용을 포함한 VEN 상에 관리되고 있는 모든 Report Request ID
@@ -304,6 +254,7 @@ public class DrController {
                     if (oadrPayloadResponse.getOadrSignedObject().getOadrResponse().getEiResponse().getResponseCode().equals(DR_CODE_SUCCESS)) {
                         logger.info(" [ CreatedReport 전송 완료 ] ");
 
+                        //레포트 정보 등록
                         drService.insertReportList(drReportVOArrayList);
 
                         insertCount++;
@@ -362,7 +313,7 @@ public class DrController {
             OadrReportType reportUpdate = Oadr20bEiReportBuilders
                     .newOadr20bUpdateReportOadrReportBuilder(DR_REPORT_ID + UUID.randomUUID(), DR_REPORT_SPECIFIER_ID, DR_REPORT_REQUEST_ID + UUID.randomUUID(), reportName,
                             createdTimestamp, Long.valueOf(dtStart), null)
-                    .addInterval(Oadr20bEiBuilders.newOadr20bReportIntervalTypeBuilder(intervalId, dtStart, DR_PT15M, DR_R_ID_PLUS_DR,confidence, accuracy, value).build())
+                    .addInterval(Oadr20bEiBuilders.newOadr20bReportIntervalTypeBuilder(intervalId, dtStart, DR_PT15M, "rId",confidence, accuracy, value).build())
                     .build();
 
             //OadrUpdateReportType oadrUpdateReportType = Oadr20bEiReportBuilders.newOadr20bUpdateReportBuilder(DR_REQUEST_ID, DR_VEN_ID).addReport(reportUpdate).build();
@@ -397,44 +348,63 @@ public class DrController {
         }
     }
 
-    //주기적으로 DR Event 폴링 - 최소 30초
+    /**
+     * 주기적으로 DR Event 폴링 - 최소 30초
+     */
     @Scheduled(cron="0/60 * * * * *")
     @RequestMapping("/oadrPoll")
     public void oadrPoll() {
-        logger.info("[ oadrPoll Start - " + simpleDateFormatDefault.format(new Date()) + " ]");
+        logger.info("---------------------------------------------------");
+        logger.info("[ Poll - " + simpleDateFormatDefault.format(new Date()) + " ]");
 
         getDrBase();
 
-        if (app.drVenId != null && !app.drVenId.equals("")) {
-            try {
+        try {
 
-                OadrPollType oadrPollType = Oadr20bPollBuilders.newOadr20bPollBuilder(app.drVenId).withSchemaVersion(DR_SCHEMA_VERSION).build();
+            /**
+             * 현재 시간에 가장 근접한 DR Event 시작 시간과의 차이
+             * -> 시작 시간까지 남은 시간 혹은 시작후 경과 시간을 절대값으로 구함
+             * --> 시작 전/후 1분 ~ 10분 까지는 oadrPoll 이 아닌 oadrRequestEvent 로 요청 (oadrPoll 은 1회 한하여 발령 데이터가 오는 듯 함.)
+             */
+            int gap = drService.selectEventTimeGap();
 
-                OadrPayload requestData = Oadr20bFactory.createOadrPayload("", oadrPollType);
+            //DR 시작 전/후에 DR 상태값 변경을 위해 oadrRequestEvent 로 요청
+            if ( gap > 60 && gap < 600 ) {
+                oadrRequestEvent();
+            } else {
+                if (app.drVenId != null && !app.drVenId.equals("")) {
 
-                OadrPayload oadrPayload = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.OADR_POLL_SERVICE, OadrPayload.class);
+                    OadrPollType oadrPollType = Oadr20bPollBuilders.newOadr20bPollBuilder(app.drVenId).withSchemaVersion(DR_SCHEMA_VERSION).build();
 
-                parseEvent(oadrPayload, "oadrPoll");
+                    OadrPayload requestData = Oadr20bFactory.createOadrPayload("", oadrPollType);
 
-            } catch (Oadr20bException e) {
-                throw new RuntimeException(e);
-            } catch (Oadr20bHttpLayerException e) {
-                throw new RuntimeException(e);
-            } catch (Oadr20bXMLSignatureException e) {
-                throw new RuntimeException(e);
-            } catch (Oadr20bXMLSignatureValidationException e) {
-                throw new RuntimeException(e);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+                    OadrPayload oadrPayload = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.OADR_POLL_SERVICE, OadrPayload.class);
+
+                    parseEvent(oadrPayload, "oadrPoll");
+
+                } else {
+                    logger.info("[ Poll Failure - 등록된 VEN 아이디 없음 ]");
+                }
             }
-        } else {
-            logger.info("[ Poll Failure - 등록된 VEN 아이디 없음 ]");
+
+            logger.info("---------------------------------------------------");
+        } catch (Oadr20bException e) {
+            throw new RuntimeException(e);
+        } catch (Oadr20bHttpLayerException e) {
+            throw new RuntimeException(e);
+        } catch (Oadr20bXMLSignatureException e) {
+            throw new RuntimeException(e);
+        } catch (Oadr20bXMLSignatureValidationException e) {
+            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
     @RequestMapping("/oadrRequestEvent")
     public void oadrRequestEvent() {
-        logger.info("[ oadrRequestEvent Call - " + simpleDateFormat.format(new Date()) + " ]");
+        logger.info("---------------------------------------------------");
+        logger.info("[ RequestEvent - " + simpleDateFormat.format(new Date()) + " ]");
 
         getDrBase();
 
@@ -447,7 +417,9 @@ public class DrController {
 
                 OadrPayload oadrPayload = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.EI_EVENT_SERVICE, OadrPayload.class);
 
-                parseEvent(oadrPayload, "oadrRequestEvent");
+                parseEvent(oadrPayload, "oadrRequestEvent"); //DR Event 파싱
+
+                logger.info("---------------------------------------------------");
 
             } catch (Oadr20bException e) {
                 throw new RuntimeException(e);
@@ -466,20 +438,12 @@ public class DrController {
     }
 
     private void parseEvent(OadrPayload oadrPayload, String apiType) {
-        logger.info("---------------------------------------------------");
-        logger.info("VTN ->");
 
         if (oadrPayload.getOadrSignedObject().getOadrDistributeEvent() != null && oadrPayload.getOadrSignedObject().getOadrDistributeEvent().getEiResponse().getResponseCode().equals(DR_CODE_SUCCESS)) {
 
             try {
 
                 DrEventVO drEventVO = new DrEventVO();
-
-                logger.info("ResponseCode : " + oadrPayload.getOadrSignedObject().getOadrDistributeEvent().getEiResponse().getResponseCode());
-                logger.info("ResponseDescription : " + oadrPayload.getOadrSignedObject().getOadrDistributeEvent().getEiResponse().getResponseDescription());
-                logger.info("EiResponse().getRequestID : " + oadrPayload.getOadrSignedObject().getOadrDistributeEvent().getEiResponse().getRequestID());
-                logger.info("RequestID : " + oadrPayload.getOadrSignedObject().getOadrDistributeEvent().getRequestID());
-                logger.info("VtnID : " + oadrPayload.getOadrSignedObject().getOadrDistributeEvent().getVtnID());
 
                 List<OadrDistributeEventType.OadrEvent> oadrEventList = oadrPayload.getOadrSignedObject().getOadrDistributeEvent().getOadrEvent();
 
@@ -493,13 +457,8 @@ public class DrController {
                         logger.info("ModificationReason : " + oadrEventList.get(i).getEiEvent().getEventDescriptor().getModificationReason());
                     if (oadrEventList.get(i).getEiEvent().getEventDescriptor().getPriority() != null && !oadrEventList.get(i).getEiEvent().getEventDescriptor().getPriority().equals(""))
                         logger.info("Priority : " + oadrEventList.get(i).getEiEvent().getEventDescriptor().getPriority());
-                    logger.info("MarketContext : " + oadrEventList.get(i).getEiEvent().getEventDescriptor().getEiMarketContext().getMarketContext());
-                    logger.info("CreatedDateTime : " + oadrEventList.get(i).getEiEvent().getEventDescriptor().getCreatedDateTime());
-                    logger.info("EventStatus : " + oadrEventList.get(i).getEiEvent().getEventDescriptor().getEventStatus().value());
-                    logger.info("TestEvent : " + oadrEventList.get(i).getEiEvent().getEventDescriptor().getTestEvent());
                     if (oadrEventList.get(i).getEiEvent().getEventDescriptor().getVtnComment() != null && !oadrEventList.get(i).getEiEvent().getEventDescriptor().getVtnComment().equals(""))
                         logger.info("VtnComment : " + oadrEventList.get(i).getEiEvent().getEventDescriptor().getVtnComment());
-                    logger.info("Properties().getDtstart().getDateTime() : " + oadrEventList.get(i).getEiEvent().getEiActivePeriod().getProperties().getDtstart().getDateTime());
 
                     drEventVO.setEventId(oadrEventList.get(i).getEiEvent().getEventDescriptor().getEventID());
                     drEventVO.setEventSttusCd(oadrEventList.get(i).getEiEvent().getEventDescriptor().getEventStatus().value());
@@ -515,20 +474,6 @@ public class DrController {
 
                     drEventVO.setEndHhmm(timeMap.get("endHHmm"));
                     drEventVO.setCntncHh(timeMap.get("gap"));
-
-                    logger.info("Properties().getDuration().getDuration() : " + oadrEventList.get(i).getEiEvent().getEiActivePeriod().getProperties().getDuration().getDuration());
-                    if (oadrEventList.get(i).getEiEvent().getEiActivePeriod().getProperties().getTolerance() != null
-                            && !oadrEventList.get(i).getEiEvent().getEiActivePeriod().getProperties().getTolerance().equals(""))
-                        logger.info("Properties().getTolerance().getTolerate().getStartafter() : " + oadrEventList.get(i).getEiEvent().getEiActivePeriod().getProperties().getTolerance().getTolerate().getStartafter());
-                    if (oadrEventList.get(i).getEiEvent().getEiActivePeriod().getProperties().getXEiNotification() != null
-                            && !oadrEventList.get(i).getEiEvent().getEiActivePeriod().getProperties().getXEiNotification().equals(""))
-                        logger.info("Properties().getXEiNotification().getDuration() : " + oadrEventList.get(i).getEiEvent().getEiActivePeriod().getProperties().getXEiNotification().getDuration());
-                    if (oadrEventList.get(i).getEiEvent().getEiActivePeriod().getProperties().getXEiRampUp() != null
-                            && !oadrEventList.get(i).getEiEvent().getEiActivePeriod().getProperties().getXEiRampUp().equals(""))
-                        logger.info("Properties().getXEiRampUp().getDuration() : " + oadrEventList.get(i).getEiEvent().getEiActivePeriod().getProperties().getXEiRampUp().getDuration());
-                    if (oadrEventList.get(i).getEiEvent().getEiActivePeriod().getProperties().getXEiRecovery() != null
-                            && !oadrEventList.get(i).getEiEvent().getEiActivePeriod().getProperties().getXEiRecovery().equals(""))
-                        logger.info("Properties().getXEiRecovery().getDuration() : " + oadrEventList.get(i).getEiEvent().getEiActivePeriod().getProperties().getXEiRecovery().getDuration());
 
                     if (oadrEventList.get(i).getEiEvent().getEiTarget().getGroupID() != null && oadrEventList.get(i).getEiEvent().getEiTarget().getGroupID().size() > 0) {
                         List<String> groupIDList = oadrEventList.get(i).getEiEvent().getEiTarget().getGroupID();
@@ -546,13 +491,9 @@ public class DrController {
                         //Interval
                         List<IntervalType> intervalTypeList = eiEventSignalTypeList.get(j).getIntervals().getInterval();
                         for (int k = 0; k < intervalTypeList.size(); k++) {
-                            logger.info("intervalTypeList.get(k).getDuration().getDuration() : " + intervalTypeList.get(k).getDuration().getDuration());
-                            logger.info("intervalTypeList.get(k).getUid() : " + intervalTypeList.get(k).getUid().getText());
 
                             SignalPayloadType signalPayloadType = (SignalPayloadType) intervalTypeList.get(k).getStreamPayloadBase().get(0).getValue();
                             PayloadFloatType payloadFloatType = (PayloadFloatType) signalPayloadType.getPayloadBase().getValue();
-
-                            logger.info("Value : " + payloadFloatType.getValue());
 
                             drEventVO.setValue(String.valueOf(payloadFloatType.getValue()));
                             drEventVO.setUid(Integer.parseInt(intervalTypeList.get(k).getUid().getText()));
@@ -573,12 +514,10 @@ public class DrController {
                                 drEventVO.setCntncHh(intervalTimeMap.get("gap"));
                             }
 
+                            //DR Event 등록/수정
                             drService.updateDrEvent(drEventVO);
                         }
 
-                        logger.info("eiEventSignalTypeList.get(j).getSignalName() : " + eiEventSignalTypeList.get(j).getSignalName());
-                        logger.info("eiEventSignalTypeList.get(j).getSignalType() : " + eiEventSignalTypeList.get(j).getSignalType());
-                        logger.info("eiEventSignalTypeList.get(j).getSignalID() : " + eiEventSignalTypeList.get(j).getSignalID());
                         logger.info("eiEventSignalTypeList.get(j).getCurrentValue().getPayloadFloat().getValue() : " + eiEventSignalTypeList.get(j).getCurrentValue().getPayloadFloat().getValue());
                     }
                 }
@@ -586,7 +525,7 @@ public class DrController {
                 /**
                  * Poll 할 때만 참여/미참여 응답 보냄
                  * 일단, 무조건 참여로 응답함
-                 * */
+                 */
                 if (apiType.equals("oadrPoll")) {
                     oadrCreatedEvent(drEventVO.getEventId(), drEventVO.getModificationNumber(), 200);
                 }
@@ -599,16 +538,12 @@ public class DrController {
         //DR Event 없음
         else {
             logger.info(" [ DR Event 없음 ] ");
-            logger.info("ResponseCode : " + oadrPayload.getOadrSignedObject().getOadrResponse().getEiResponse().getResponseCode());
-            logger.info("ResponseDescription : " + oadrPayload.getOadrSignedObject().getOadrResponse().getEiResponse().getResponseDescription());
-            logger.info("RequestID : " + oadrPayload.getOadrSignedObject().getOadrResponse().getEiResponse().getRequestID());
-            logger.info("VenID : " + oadrPayload.getOadrSignedObject().getOadrResponse().getVenID());
         }
-
-        logger.info("---------------------------------------------------");
     }
 
     private void oadrCreatedEvent(String eventId, long modificationNumber, int responseCode) {
+        logger.info("---------------------------------------------------");
+        logger.info(" [ oadrCreatedEvent ] ");
 
         try {
             EiResponseType eiResponseType = Oadr20bResponseBuilders.newOadr20bEiResponseBuilder("", responseCode).build();
@@ -620,15 +555,8 @@ public class DrController {
 
             OadrPayload requestData = Oadr20bFactory.createOadrPayload("", oadrCreatedEventType);
 
-            OadrPayload oadrPayload = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.EI_EVENT_SERVICE, OadrPayload.class);
+            app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.EI_EVENT_SERVICE, OadrPayload.class);
 
-            logger.info("---------------------------------------------------");
-            logger.info(" [ oadrCreatedEvent ] ");
-            logger.info("VTN ->");
-            logger.info("ResponseCode : " + oadrPayload.getOadrSignedObject().getOadrResponse().getEiResponse().getResponseCode());
-            logger.info("ResponseDescription : " + oadrPayload.getOadrSignedObject().getOadrResponse().getEiResponse().getResponseDescription());
-            logger.info("RequestID : " + oadrPayload.getOadrSignedObject().getOadrResponse().getEiResponse().getRequestID());
-            logger.info("VenID : " + oadrPayload.getOadrSignedObject().getOadrResponse().getVenID());
             logger.info("---------------------------------------------------");
         } catch (Oadr20bException e) {
             throw new RuntimeException(e);
@@ -642,44 +570,52 @@ public class DrController {
 
     }
 
+    /**
+     * 등록된 DR 정보 가져오기
+     */
     public void getDrBase() {
         try {
             app.drBaseVO = drService.selectDrBase();
             app.drVenId = app.drBaseVO.getDrVenId();
             app.rIdList = drService.selectRId();
 
-            logger.info("DrBusinessId : " + app.drBaseVO.getDrBusinessId());
-            logger.info("DrRegistrationId : " + app.drBaseVO.getDrRegistrationId());
-            logger.info("drVenId : " + app.drVenId);
-            logger.info("rIdList : " + app.rIdList.size());
-
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    /* UTC time to local time
+    /**
+     * KPX 에서 UTC 타임을 사용하므로 한국 시간으로 변환
+     * @param datetime
+     * @param pattern
+     * @return
+     * @throws Exception
      */
     public String utcToLocaltime(String datetime, String pattern) throws Exception {
-        String locTime = null;
+        String localTime;
         TimeZone tz = TimeZone.getTimeZone("GMT+09:00");// 해당 국가 일시 확인 할 때, 한쿸은 +9
-        //TimeZone tz = TimeZone.getDefault();
         SimpleDateFormat sdf = new SimpleDateFormat(pattern);
 
         try {
             Date parseDate = simpleDateFormat.parse(datetime);
             long milliseconds = parseDate.getTime();
             int offset = tz.getOffset(milliseconds);
-            locTime = sdf.format(milliseconds + offset);
-            locTime = locTime.replace("+0000", "");
+            localTime = sdf.format(milliseconds + offset);
+            localTime = localTime.replace("+0000", "");
         } catch(Exception e) {
             e.printStackTrace();
             throw new Exception(e);
         }
 
-        return locTime;
+        return localTime;
     }
 
+    /**
+     * DR Event 시작일시로 종료일시, 지속시간 구하기
+     * @param startDate
+     * @param duration
+     * @return timeMap
+     */
     private Map<String, String> calculateDrEventTime(String startDate, int duration) {
         Map<String, String> timeMap = new HashMap<>();
 
@@ -710,4 +646,5 @@ public class DrController {
 
         return timeMap;
     }
+
 }

@@ -6,13 +6,11 @@ public class DrConstants {
     public static final boolean DR_HTTP_PULL_MODEL = true;
     public static final boolean DR_REPORT_ONLY = false;
     public static final boolean DR_XML_SIGNATURE = false;
-    public static final String DR_R_ID_PLUS_DR = "0814111153";
     public static final String DR_REPORT_SPECIFIER_ID = "KPX_TU";
     public static final String DR_RESOURCE_ID = "KpxResource";
     public static final String DR_MIN_PERIOD = "PT1M";
     public static final String DR_MAX_PERIOD = "PT5M";
     public static final String DR_PT15M = "PT15M";
-
     public static final String DR_REPORT_DURATION_0H = "PT0H";
     public static final String DR_REPORT_DURATION = "PT48000H";
     public static final String DR_MARKET_CONTEXT = "http://dras.kmos.kr";

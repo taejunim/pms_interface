@@ -3,6 +3,7 @@
 
 <mapper namespace="pms.api.dr.service.DrMapper">
 
+    <!-- 수요관리사업자 아이디 가져오기 -->
     <select id="selectDrBusinessId" resultType="java.lang.String">
 
         SELECT DRBUSINESSID AS drBusinessId
@@ -10,7 +11,7 @@
                  LIMIT 1
 
     </select>
-
+    <!-- 등록된 DR 정보 가져오기 -->
     <select id="selectDrBase" parameterType="java.lang.String" resultType="DrBaseVO">
 
         SELECT DRBUSINESSID AS drBusinessId
@@ -37,10 +38,12 @@
         WHERE DRBUSINESSID = #{drBusinessId}
     </update>
 
+    <!-- 레포트 정보 삭제 -->
     <delete id="deleteReportList">
         truncate tb_dr_report_api
     </delete>
 
+    <!-- 레포트 정보 등록 -->
     <insert id="insertReportList" parameterType="java.util.List">
 
         INSERT INTO tb_dr_report_api (
@@ -69,7 +72,7 @@
 
     </insert>
 
-    <!-- DR 참여중인 한전고객번호 리스트 -->
+    <!-- DR 참여중인 모든 한전고객번호 가져오기 -->
     <select id="selectRId" resultType="java.lang.String">
 
         SELECT kepco_cstmr_no
@@ -108,6 +111,7 @@
         ORDER BY kepco_cstmr_no
     </select>
 
+    <!-- DR Event 등록/수정 -->
     <insert id="updateDrEvent" parameterType="DrEventVO" >
 
         INSERT INTO tb_dr_issue_api (
@@ -139,7 +143,28 @@
         ON DUPLICATE KEY UPDATE
             reg_dt = NOW()
             , event_sttus_cd = #{eventSttusCd}
+            , issue_date = #{issueDate}
+            , issue_hhmm = #{issueHhmm}
+            , end_hhmm = #{endHhmm}
+            , cntnc_hh = #{cntncHh}
+            , flfl_qty = #{value}
+            , kpx_dr_rsc_id = #{kpxDrRscId}
+            , uid = #{uid}
 
     </insert>
+
+    <!-- 현재 시간에 가장 근접한 DR Event 시작 시간과의 차이 -->
+    <select id="selectEventTimeGap" resultType="java.lang.Integer">
+
+        SELECT IFNULL(MIN(GAP), 0) GAP
+        FROM (
+              SELECT ABS((UNIX_TIMESTAMP(NOW()) - UNIX_TIMESTAMP(A.selectedDate))) GAP
+              FROM (
+                    SELECT STR_TO_DATE(concat(issue_date, ' ', STR_TO_DATE(issue_hhmm, '%H%i')), '%Y-%m-%d %H:%i') as selectedDate
+                    FROM tb_dr_issue_api
+                   ) A
+             ) T
+
+    </select>
 
 </mapper>

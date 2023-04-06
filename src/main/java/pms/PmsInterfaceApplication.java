@@ -21,15 +21,11 @@ import java.util.List;
 @EnableScheduling
 @PropertySource(value = "classpath:interface.properties", encoding = "UTF-8")
 public class PmsInterfaceApplication {
-
     @Autowired
     DrService drService;
-
     public OadrHttpClient20b oadrHttpClient = new DrConfig().initOadrHttpClient20b();
-
-    public DrBaseVO drBaseVO = new DrBaseVO();
-    public String drVenId;
-
+    public DrBaseVO drBaseVO = new DrBaseVO(); //등록된 DR 정보 가져오기
+    public String drVenId; //통신을 위한 VEN 아이디
     public List<String> rIdList = new ArrayList<>(); //DR 참여중인 한전고객번호 리스트
 
     public static void main(String[] args) {

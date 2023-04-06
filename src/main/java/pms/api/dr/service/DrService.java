@@ -20,17 +20,27 @@ import java.util.List;
  */
 public interface DrService {
 
+    //등록된 DR 정보 가져오기
     DrBaseVO selectDrBase() throws Exception;
 
+    //VEN 아이디, DR 등록 아이디 등록
     int createPartyRegistration(DrBaseVO drBaseVO) throws Exception;
 
+    //VEN 아이디, DR 등록 아이디 해제
     int cancelPartyRegistration(String drBusinessId) throws Exception;
 
+    //레포트 정보 삭제
     int deleteReportList() throws Exception;
 
+    //레포트 정보 등록
     int insertReportList(ArrayList<DrReportVO> drReportVOArrayList) throws Exception;
 
+    //DR 참여중인 모든 한전고객번호 가져오기
     List<String> selectRId() throws Exception;
 
+    //DR Event 등록/수정
     int updateDrEvent(DrEventVO drEventVO) throws Exception;
+
+    //현재 시간에 가장 근접한 DR Event 시작 시간과의 차이
+    int selectEventTimeGap() throws Exception;
 }
