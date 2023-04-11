@@ -10,11 +10,10 @@ import javax.xml.bind.JAXBException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
+import static pms.api.dr.DrConstants.*;
+
 public class DrConfig {
 
-    private static final String rsaTrustedRootCertificate = "src/main/resources/KPX_DR_CA_2016.crt";
-    private static final String rsaPrivateKeyPemFilePath = "src/main/resources/20200500002642.key";
-    private static final String rsaClientCertPemFilePath = "src/main/resources/20200500002642.crt";
     private static final String[] protocols = new String[] { "TLSv1.2" };
     private static final String[] ciphers;
 
