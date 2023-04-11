@@ -99,7 +99,15 @@ public class DrController {
                 drBaseVO.setDrVenId(oadrPayload.getOadrSignedObject().getOadrCreatedPartyRegistration().getVenID());
                 drBaseVO.setDrRegistrationId(oadrPayload.getOadrSignedObject().getOadrCreatedPartyRegistration().getRegistrationID());
 
-                int createPartyRegistration = drService.createPartyRegistration(drBaseVO);
+                int createPartyRegistration;
+
+                try {
+                    createPartyRegistration = drService.createPartyRegistration(drBaseVO);
+                } catch (Exception e) {
+                    logger.info("DB 에 VEN 아이디, DR 등록 아이디 등록 Exception");
+                    logger.info("drBaseVO -> " + drBaseVO);
+                    return;
+                }
 
                 if (createPartyRegistration > 0) {
 
@@ -158,9 +166,17 @@ public class DrController {
              */
             if (oadrPayload.getOadrSignedObject().getOadrCanceledPartyRegistration().getEiResponse().getResponseCode().equals(DR_CODE_SUCCESS)) {
 
-                int createPartyRegistration = drService.cancelPartyRegistration(app.drBaseVO.drBusinessId);
+                int cancelPartyRegistration;
 
-                if (createPartyRegistration > 0) {
+                try {
+                    cancelPartyRegistration = drService.cancelPartyRegistration(app.drBaseVO.drBusinessId);
+                } catch (Exception e) {
+                    logger.info("DB 에 VEN 아이디, DR 등록 아이디 해제 Exception");
+                    logger.info("app.drBaseVO -> " + app.drBaseVO);
+                    return;
+                }
+
+                if (cancelPartyRegistration > 0) {
 
                     logger.info(" [ DR 해제 완료 ] ");
 
@@ -215,7 +231,7 @@ public class DrController {
 
                 OadrPayload oadrPayload = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.EI_REPORT_SERVICE, OadrPayload.class);
 
-                Thread.sleep(1000);
+                Thread.sleep(100);
 
                 List<OadrReportRequestType> oadrReportRequestTypeList = oadrPayload.getOadrSignedObject().getOadrRegisteredReport().getOadrReportRequest();
 
@@ -249,17 +265,24 @@ public class DrController {
 
                     OadrPayload oadrPayloadResponse = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(oadrCreatedReportData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.EI_REPORT_SERVICE, OadrPayload.class);
 
-                    Thread.sleep(1000);
+                    Thread.sleep(100);
 
                     if (oadrPayloadResponse.getOadrSignedObject().getOadrResponse().getEiResponse().getResponseCode().equals(DR_CODE_SUCCESS)) {
                         logger.info(" [ CreatedReport 전송 완료 ] ");
 
-                        //레포트 정보 등록
-                        drService.insertReportList(drReportVOArrayList);
+                        try {
+                            //레포트 정보 등록
+                            drService.insertReportList(drReportVOArrayList);
+                        } catch (Exception e) {
+                            drService.deleteReportList();
+                            logger.info(" [ CreatedReport Exception ] ");
+                            logger.info("drReportVOArrayList -> " + drReportVOArrayList.get(0));
+                            return insertCount;
+                        }
 
                         insertCount++;
 
-                        Thread.sleep(1000);
+                        Thread.sleep(100);
 
                     } else {
                         drService.deleteReportList();
@@ -360,34 +383,40 @@ public class DrController {
         getDrBase();
 
         try {
+            //DR 참여하는 고객수와 등록된 레포트 수가 같아야 폴링
+            if (app.rIdList.size() == app.reportIdCount) {
+                /**
+                 * 현재 시간에 가장 근접한 DR Event 시작 시간과의 차이
+                 * -> 시작 시간까지 남은 시간 혹은 시작후 경과 시간을 절대값으로 구함
+                 * --> 시작 전/후 1분 ~ 10분 까지는 oadrPoll 이 아닌 oadrRequestEvent 로 요청 (oadrPoll 은 1회 한하여 발령 데이터가 오는 듯 함.)
+                 */
+                int gap = drService.selectEventTimeGap();
 
-            /**
-             * 현재 시간에 가장 근접한 DR Event 시작 시간과의 차이
-             * -> 시작 시간까지 남은 시간 혹은 시작후 경과 시간을 절대값으로 구함
-             * --> 시작 전/후 1분 ~ 10분 까지는 oadrPoll 이 아닌 oadrRequestEvent 로 요청 (oadrPoll 은 1회 한하여 발령 데이터가 오는 듯 함.)
-             */
-            int gap = drService.selectEventTimeGap();
-
-            //DR 시작 전/후에 DR 상태값 변경을 위해 oadrRequestEvent 로 요청
-            if ( gap > 60 && gap < 600 ) {
-                oadrRequestEvent();
-            } else {
-                if (app.drVenId != null && !app.drVenId.equals("")) {
-
-                    OadrPollType oadrPollType = Oadr20bPollBuilders.newOadr20bPollBuilder(app.drVenId).withSchemaVersion(DR_SCHEMA_VERSION).build();
-
-                    OadrPayload requestData = Oadr20bFactory.createOadrPayload("", oadrPollType);
-
-                    OadrPayload oadrPayload = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.OADR_POLL_SERVICE, OadrPayload.class);
-
-                    parseEvent(oadrPayload, "oadrPoll");
-
+                //DR 시작 전/후에 DR 상태값 변경을 위해 oadrRequestEvent 로 요청
+                if ( gap > 60 && gap < 600 ) {
+                    oadrRequestEvent();
                 } else {
-                    logger.info("[ Poll Failure - 등록된 VEN 아이디 없음 ]");
+                    if (app.drVenId != null && !app.drVenId.equals("")) {
+
+                        OadrPollType oadrPollType = Oadr20bPollBuilders.newOadr20bPollBuilder(app.drVenId).withSchemaVersion(DR_SCHEMA_VERSION).build();
+
+                        OadrPayload requestData = Oadr20bFactory.createOadrPayload("", oadrPollType);
+
+                        OadrPayload oadrPayload = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.OADR_POLL_SERVICE, OadrPayload.class);
+
+                        parseEvent(oadrPayload, "oadrPoll");
+
+                    } else {
+                        logger.info("[ Poll Failure - 등록된 VEN 아이디 없음 ]");
+                    }
                 }
+
+            } else {
+                logger.info("[ Poll Failure - 레포트 갱신 필요 ]");
             }
 
             logger.info("---------------------------------------------------");
+
         } catch (Oadr20bException e) {
             throw new RuntimeException(e);
         } catch (Oadr20bHttpLayerException e) {
@@ -513,21 +542,30 @@ public class DrController {
                                 drEventVO.setEndHhmm(intervalTimeMap.get("endHHmm"));
                                 drEventVO.setCntncHh(intervalTimeMap.get("gap"));
                             }
-
-                            //DR Event 등록/수정
-                            drService.updateDrEvent(drEventVO);
                         }
 
                         logger.info("eiEventSignalTypeList.get(j).getCurrentValue().getPayloadFloat().getValue() : " + eiEventSignalTypeList.get(j).getCurrentValue().getPayloadFloat().getValue());
                     }
                 }
 
-                /**
-                 * Poll 할 때만 참여/미참여 응답 보냄
-                 * 일단, 무조건 참여로 응답함
-                 */
-                if (apiType.equals("oadrPoll")) {
-                    oadrCreatedEvent(drEventVO.getEventId(), drEventVO.getModificationNumber(), 200);
+                try {
+                    //DR Event 등록/수정
+                    int updateDrEvent = drService.updateDrEvent(drEventVO);
+
+                    /**
+                     * Poll 할 때만 참여/미참여 응답 보냄
+                     * 일단, 무조건 참여로 응답함
+                     */
+                    if (apiType.equals("oadrPoll") && updateDrEvent > 0) {
+                        oadrCreatedEvent(drEventVO.getEventId(), drEventVO.getModificationNumber(), 200);
+                    } else {
+                        logger.info("DR Event 등록/수정 Error");
+                        logger.info("drEventVO -> " + drEventVO);
+                    }
+
+                } catch (Exception e) {
+                    logger.info("DR Event 등록/수정 Exception");
+                    logger.info("drEventVO -> " + drEventVO);
                 }
 
             } catch (Exception e) {
@@ -578,6 +616,7 @@ public class DrController {
             app.drBaseVO = drService.selectDrBase();
             app.drVenId = app.drBaseVO.getDrVenId();
             app.rIdList = drService.selectRId();
+            app.reportIdCount = drService.selectReportIdCount();
 
         } catch (Exception e) {
             throw new RuntimeException(e);

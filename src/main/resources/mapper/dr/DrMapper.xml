@@ -111,6 +111,14 @@
         ORDER BY kepco_cstmr_no
     </select>
 
+    <!-- 등록된 레포트 아이디 개수 -->
+    <select id="selectReportIdCount" resultType="java.lang.Integer">
+
+        SELECT COUNT(DISTINCT kepco_cstmr_no)
+        FROM tb_dr_report_api
+
+    </select>
+
     <!-- DR Event 등록/수정 -->
     <insert id="updateDrEvent" parameterType="DrEventVO" >
 
@@ -121,7 +129,7 @@
                                    , issue_hhmm
                                    , end_hhmm
                                    , cntnc_hh
-                                   , flfl_qty
+                                   , reqst_qty
                                    , kpx_dr_rsc_id
                                    , event_id
                                    , event_sttus_cd
@@ -147,7 +155,7 @@
             , issue_hhmm = #{issueHhmm}
             , end_hhmm = #{endHhmm}
             , cntnc_hh = #{cntncHh}
-            , flfl_qty = #{value}
+            , reqst_qty = #{value}
             , kpx_dr_rsc_id = #{kpxDrRscId}
             , uid = #{uid}
 

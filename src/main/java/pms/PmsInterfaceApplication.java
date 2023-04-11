@@ -27,6 +27,7 @@ public class PmsInterfaceApplication {
     public DrBaseVO drBaseVO = new DrBaseVO(); //등록된 DR 정보 가져오기
     public String drVenId; //통신을 위한 VEN 아이디
     public List<String> rIdList = new ArrayList<>(); //DR 참여중인 한전고객번호 리스트
+    public int reportIdCount = 0; //등록된 레포트 아이디 개수
 
     public static void main(String[] args) {
         SpringApplication.run(PmsInterfaceApplication.class, args);
@@ -43,6 +44,7 @@ public class PmsInterfaceApplication {
             drVenId = drBaseVO.getDrVenId();
 
             rIdList = drService.selectRId();
+            reportIdCount = drService.selectReportIdCount();
 
         } catch (Exception e) {
             throw new RuntimeException(e);

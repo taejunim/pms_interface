@@ -41,6 +41,9 @@ public interface DrMapper {
     //DR 참여중인 모든 한전고객번호 가져오기
     List<String> selectRId() throws Exception;
 
+    //등록된 레포트 아이디 개수
+    int selectReportIdCount() throws Exception;
+
     //DR Event 등록/수정
     int updateDrEvent(DrEventVO drEventVO) throws Exception;
 

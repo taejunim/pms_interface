@@ -65,6 +65,12 @@ public class DrServiceImpl implements DrService {
         return drMapper.selectRId();
     }
 
+    //등록된 레포트 아이디 개수
+    public int selectReportIdCount() throws Exception {
+        DrMapper drMapper = sqlSession.getMapper(DrMapper.class);
+        return drMapper.selectReportIdCount();
+    }
+
     //DR Event 등록/수정
     public int updateDrEvent(DrEventVO drEventVO) throws Exception {
         DrMapper drMapper = sqlSession.getMapper(DrMapper.class);
