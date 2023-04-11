@@ -1,16 +1,17 @@
 package pms.api.kepcoAmi;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpServerErrorException;
-
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import pms.api.kepcoAmi.service.KepcoAmiService;
@@ -321,7 +322,6 @@ public class KepcoAmiScheduler {
      * 한전 계기번호 목록을 메모리에 저장하고 DB 고객정보와 비교, 매일 08시 44분에 실행
      **/
     //@Scheduled(cron = "0 44 8 * * *")
-    @Scheduled(cron = "0 9 21 * * *")
     public void saveKepcoAmiData() {
 
         logger.debug("==== 한전 계기 번호 Scheduler 실행 ====");
@@ -407,33 +407,6 @@ public class KepcoAmiScheduler {
                 logger.error("한전 고객 정보 데이터 Exception 발생. 고객 정보 API 호출을 재시도 합니다.");
                 logger.error(e.getLocalizedMessage());
             }
-        }
-    }
-
-    //디버깅용 메소드 (고객번호 , 계기번호 자동 세팅)
-    public void test(){
-
-        String meterList1[] = new String[]{"0639524967","0141923612","0645164380","0801116878","0801118000","0801467221","0810405780","0810669530","0811466659","0812586518","1120627106"};
-        String meterList2[] = new String[]{"08162030057","25450077934","01171403624","48190233886","08190184362","05455147833","35190237347","07250037194","47191022238","07190106519","39170926839"};
-
-        for(int i = 0; i <11 ; i ++){
-            KepcoAmiVO kepcoAmiVO = new KepcoAmiVO();
-
-            kepcoAmiVO.setCustNo(meterList1[i]);
-            kepcoAmiVO.setMeterNo(meterList2[i]);
-            if(i != 0) kepcoAmiVO.setLvHvVal("저압");
-            else kepcoAmiVO.setLvHvVal("고압");
-            customerList.add(kepcoAmiVO);
-            amiList.add(kepcoAmiVO);
-        }
-
-        HashMap<String, Object> parameter = new HashMap<>();
-        parameter.put("list", amiList);
-        //한전 API에서 가져온 AMI와 CEMS에 등록된 AMI 목록 비교
-        try {
-            amiList = kepcoAmiService.selectRegisterAmi(parameter);
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 }
