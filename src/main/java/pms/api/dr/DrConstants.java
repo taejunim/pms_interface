@@ -31,9 +31,9 @@ public class DrConstants {
     public static final String DR_CODE_SUCCESS = "200";
 
     /* Key / Certificate */
-    public static final String rsaTrustedRootCertificate = "../webapps/ROOT/WEB-INF/classes/key/KPX_DR_CA_2016.crt";
-    public static final String rsaPrivateKeyPemFilePath = "../webapps/ROOT/WEB-INF/classes/key/20200500002642.key";
-    public static final String rsaClientCertPemFilePath = "../webapps/ROOT/WEB-INF/classes/key/20200500002642.crt";
+    public static final String rsaTrustedRootCertificate = "/jw/svc/pms-if/ssl/key/KPX_DR_CA_2016.crt";
+    public static final String rsaPrivateKeyPemFilePath = "/jw/svc/pms-if/ssl/key/20200500002642.key";
+    public static final String rsaClientCertPemFilePath = "/jw/svc/pms-if/ssl/key/20200500002642.crt";
 
     private static final String rsaTrustedRootCertificate_local = "src/main/resources/KPX_DR_CA_2016.crt";
     private static final String rsaPrivateKeyPemFilePath_local = "src/main/resources/20200500002642.key";
