@@ -40,8 +40,9 @@ import javax.xml.bind.annotation.*;
 })
 public class QualifiedEventIDType {
 
-    @XmlElement(required = true)
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected String eventID;
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110")
     @XmlSchemaType(name = "unsignedInt")
     protected long modificationNumber;
 

@@ -53,6 +53,7 @@ import java.util.List;
 @XmlRootElement(name = "eventResponses")
 public class EventResponses {
 
+    @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110")
     protected List<EventResponse> eventResponse;
 
     /**
@@ -118,14 +119,15 @@ public class EventResponses {
     })
     public static class EventResponse {
 
-        @XmlElement(required = true)
+        @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
         protected String responseCode;
+        @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110")
         protected String responseDescription;
         @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110/payloads", required = true)
         protected String requestID;
-        @XmlElement(required = true)
+        @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
         protected QualifiedEventIDType qualifiedEventID;
-        @XmlElement(required = true)
+        @XmlElement(namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
         @XmlSchemaType(name = "token")
         protected OptTypeType optType;
 

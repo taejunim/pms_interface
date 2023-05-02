@@ -39,6 +39,8 @@ public class DrController {
     @Autowired
     DrService drService;
 
+    private boolean renewing = false;
+
     @RequestMapping("/sslTest")
     private void sslTest() {
         logger.info("---------------------------------------------------");
@@ -380,53 +382,70 @@ public class DrController {
         logger.info("---------------------------------------------------");
         logger.info("[ Poll - " + simpleDateFormatDefault.format(new Date()) + " ]");
 
-        getDrBase();
+        //레포트 갱신중
+        if (renewing == true) {
+            logger.info("[ Poll Failure - 레포트 갱신중 ]");
+        } else {
+            getDrBase();
 
-        try {
-            //DR 참여하는 고객수와 등록된 레포트 수가 같아야 폴링
-            if (app.rIdList.size() == app.reportIdCount) {
-                /**
-                 * 현재 시간에 가장 근접한 DR Event 시작 시간과의 차이
-                 * -> 시작 시간까지 남은 시간 혹은 시작후 경과 시간을 절대값으로 구함
-                 * --> 시작 전/후 1분 ~ 10분 까지는 oadrPoll 이 아닌 oadrRequestEvent 로 요청 (oadrPoll 은 1회 한하여 발령 데이터가 오는 듯 함.)
-                 */
-                int gap = drService.selectEventTimeGap();
+            try {
+                //DR 참여하는 고객수와 등록된 레포트 수가 같아야 폴링
+                if (app.rIdList.size() == app.reportIdCount) {
+                    /**
+                     * 현재 시간에 가장 근접한 DR Event 시작 시간과의 차이
+                     * -> 시작 시간까지 남은 시간 혹은 시작후 경과 시간을 절대값으로 구함
+                     * --> 시작 전/후 1분 ~ 10분 까지는 oadrPoll 이 아닌 oadrRequestEvent 로 요청 (oadrPoll 은 1회 한하여 발령 데이터가 오는 듯 함.)
+                     */
+                    int gap = drService.selectEventTimeGap();
 
-                //DR 시작 전/후에 DR 상태값 변경을 위해 oadrRequestEvent 로 요청
-                if ( gap > 60 && gap < 600 ) {
-                    oadrRequestEvent();
-                } else {
-                    if (app.drVenId != null && !app.drVenId.equals("")) {
-
-                        OadrPollType oadrPollType = Oadr20bPollBuilders.newOadr20bPollBuilder(app.drVenId).withSchemaVersion(DR_SCHEMA_VERSION).build();
-
-                        OadrPayload requestData = Oadr20bFactory.createOadrPayload("", oadrPollType);
-
-                        OadrPayload oadrPayload = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.OADR_POLL_SERVICE, OadrPayload.class);
-
-                        parseEvent(oadrPayload, "oadrPoll");
-
+                    //DR 시작 전/후에 DR 상태값 변경을 위해 oadrRequestEvent 로 요청
+                    if ( gap > 60 && gap < 600 ) {
+                        oadrRequestEvent();
                     } else {
-                        logger.info("[ Poll Failure - 등록된 VEN 아이디 없음 ]");
+                        if (app.drVenId != null && !app.drVenId.equals("")) {
+
+                            OadrPollType oadrPollType = Oadr20bPollBuilders.newOadr20bPollBuilder(app.drVenId).withSchemaVersion(DR_SCHEMA_VERSION).build();
+
+                            OadrPayload requestData = Oadr20bFactory.createOadrPayload("", oadrPollType);
+
+                            OadrPayload oadrPayload = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.OADR_POLL_SERVICE, OadrPayload.class);
+
+                            parseEvent(oadrPayload, "oadrPoll");
+
+                        } else {
+                            logger.info("[ Poll Failure - 등록된 VEN 아이디 없음 ]");
+                        }
+                    }
+
+                } else {
+                    logger.info("[ Poll Failure - 레포트 갱신 필요 ]");
+
+                    renewing = true;
+
+                    int registerReportCount = registerReport(app.drBaseVO, app.rIdList);
+
+                    if (registerReportCount == app.rIdList.size()) {
+                        logger.info(" [ DR 레포트 등록 완료 ] ");
+                        renewing = false;
+                    } else {
+                        logger.info(" [ DR 레포트 등록 오류 : 일부 등록 실패 ] ");
+                        renewing = false;
                     }
                 }
 
-            } else {
-                logger.info("[ Poll Failure - 레포트 갱신 필요 ]");
+                logger.info("---------------------------------------------------");
+
+            } catch (Oadr20bException e) {
+                throw new RuntimeException(e);
+            } catch (Oadr20bHttpLayerException e) {
+                throw new RuntimeException(e);
+            } catch (Oadr20bXMLSignatureException e) {
+                throw new RuntimeException(e);
+            } catch (Oadr20bXMLSignatureValidationException e) {
+                throw new RuntimeException(e);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
-
-            logger.info("---------------------------------------------------");
-
-        } catch (Oadr20bException e) {
-            throw new RuntimeException(e);
-        } catch (Oadr20bHttpLayerException e) {
-            throw new RuntimeException(e);
-        } catch (Oadr20bXMLSignatureException e) {
-            throw new RuntimeException(e);
-        } catch (Oadr20bXMLSignatureValidationException e) {
-            throw new RuntimeException(e);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -555,6 +574,8 @@ public class DrController {
                     /**
                      * Poll 할 때만 참여/미참여 응답 보냄
                      * 일단, 무조건 참여로 응답함
+                     *  !! 230502 현재 발령 시간이 됐는데도 eventStatus 가 acitve 로 와야 하는데 far 로 와서 updateDrEvent 가 0 임.
+                     *  추후에 문제시 전력거래소에 문의해야 함.
                      */
                     if (apiType.equals("oadrPoll") && updateDrEvent > 0) {
                         oadrCreatedEvent(drEventVO.getEventId(), drEventVO.getModificationNumber(), 200);
