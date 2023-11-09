@@ -55,10 +55,12 @@ public class ReportPayloadType
     extends StreamPayloadBaseType
 {
 
-    @XmlElement(name = "rID", required = true)
+    @XmlElement(name = "rID", namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected String rid;
     @XmlSchemaType(name = "unsignedInt")
+    @XmlElement(name = "confidence", namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected Long confidence;
+    @XmlElement(name = "accuracy", namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", required = true)
     protected Float accuracy;
     @XmlElementRef(name = "payloadBase", namespace = "http://docs.oasis-open.org/ns/energyinterop/201110", type = JAXBElement.class)
     protected JAXBElement<? extends PayloadBaseType> payloadBase;

@@ -20,6 +20,7 @@ import pms.api.dr.service.DrService;
 import pms.api.dr.service.vo.DrBaseVO;
 import pms.api.dr.service.vo.DrEventVO;
 import pms.api.dr.service.vo.DrReportVO;
+import pms.api.dr.service.vo.DrUpdateReportVO;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -320,63 +321,166 @@ public class DrController {
         registerReport(app.drBaseVO, app.rIdList);
     }
 
-    @RequestMapping("/updateReport")
-    private void updateReport() {
+    //계량값 Update - 5분 주기로 5분데이터, 15분 주기로 15분 데이터 전송
+    //@Scheduled(cron="10 0/5 * * * *")
+    @RequestMapping("/oadrUpdateReport")
+    private void oadrUpdateReport() {
+        logger.info("---------------------------------------------------");
+        logger.info("[ UpdateReport - " + simpleDateFormatDefault.format(new Date()) + " ]");
+
+        //레포트 갱신중
+        if (renewing == true) {
+            logger.info("[ UpdateReport Failure - 레포트 갱신중 ]");
+        } else {
+            getDrBase();
+
+            try {
+                //DR 참여하는 고객수와 등록된 레포트 수가 같아야 계량값 Update
+                if (app.rIdList.size() == app.reportIdCount) {
+
+                    DrUpdateReportVO drUpdateReportVO = getReportStartTime();
+
+                    //5분 데이터 전송
+                    updateReport(DR_PT5M, drUpdateReportVO);
+
+                    String minute = drUpdateReportVO.getHhmm().substring(2,4);
+
+                    //15분 데이터 전송
+                    if (minute.equals("00") || minute.equals("15") || minute.equals("30") || minute.equals("45")) {
+                        updateReport(DR_PT15M, drUpdateReportVO);
+                    }
+
+                } else {
+                    logger.info("[ UpdateReport Failure - 레포트 갱신 필요 ]");
+
+                    renewReport();
+                }
+
+                logger.info("---------------------------------------------------");
+            } catch (Oadr20bException e) {
+                throw new RuntimeException(e);
+            } catch (Oadr20bHttpLayerException e) {
+                throw new RuntimeException(e);
+            } catch (Oadr20bXMLSignatureException e) {
+                throw new RuntimeException(e);
+            } catch (Oadr20bXMLSignatureValidationException e) {
+                throw new RuntimeException(e);
+            } catch (Exception e) {
+                logger.info(" [ UpdateReport Exception ] ");
+            }
+        }
+
+    }
+
+    private void updateReport(String duration, DrUpdateReportVO drUpdateReportVO) {
 
         try {
+            for (int i=0; i<app.rIdList.size(); i++) {
 
-            ReportNameEnumeratedType reportName = ReportNameEnumeratedType.TELEMETRY_USAGE;
-            long createdTimestamp = System.currentTimeMillis();
-            String intervalId = "0";
+                drUpdateReportVO.setKepcoCstmrNo(app.rIdList.get(i));
+                drUpdateReportVO.setDuration(duration);
+                DrUpdateReportVO meterValue = drService.selectMeterValue(drUpdateReportVO);
 
-            //Long dtStart = Long.valueOf(simpleDateFormat.format(new Date()));
-            Long dtStart = System.currentTimeMillis();
-            Long confidence = Long.valueOf(100);
-            Float accuracy = 0.0F;
-            Float value = 100.0F;
+                drUpdateReportVO.setIntervalNum(0);
+                drUpdateReportVO.setAccmltMeteringVal(meterValue.getAccmltMeteringVal());
+                drUpdateReportVO.setDrVenId(app.drVenId);
 
-            OadrReportType reportUpdate = Oadr20bEiReportBuilders
-                    .newOadr20bUpdateReportOadrReportBuilder(DR_REPORT_ID + UUID.randomUUID(), DR_REPORT_SPECIFIER_ID, DR_REPORT_REQUEST_ID + UUID.randomUUID(), reportName,
-                            createdTimestamp, Long.valueOf(dtStart), null)
-                    .addInterval(Oadr20bEiBuilders.newOadr20bReportIntervalTypeBuilder(intervalId, dtStart, DR_PT15M, "rId",confidence, accuracy, value).build())
-                    .build();
+                String reportRequestId = drService.selectReportRequestId(drUpdateReportVO);
 
-            //OadrUpdateReportType oadrUpdateReportType = Oadr20bEiReportBuilders.newOadr20bUpdateReportBuilder(DR_REQUEST_ID, DR_VEN_ID).addReport(reportUpdate).build();
-            OadrUpdateReportType oadrUpdateReportType = Oadr20bEiReportBuilders.newOadr20bUpdateReportBuilder(DR_UPDATE_REPORT_ID + UUID.randomUUID(), app.drVenId).addReport(reportUpdate).build();
+                if (meterValue != null) {
+                    ReportNameEnumeratedType reportName = ReportNameEnumeratedType.TELEMETRY_USAGE;
+                    long createdTimestamp = System.currentTimeMillis();
 
-            OadrPayload requestData = Oadr20bFactory.createOadrPayload("", oadrUpdateReportType);
+                    OadrReportType reportUpdate = Oadr20bEiReportBuilders
+                            .newOadr20bUpdateReportOadrReportBuilder(DR_REPORT_ID + UUID.randomUUID(), DR_REPORT_SPECIFIER_ID, reportRequestId, reportName,
+                                    createdTimestamp, Long.valueOf(drUpdateReportVO.getReportStartTime()), null)
+                            .addInterval(Oadr20bEiBuilders.newOadr20bReportIntervalTypeBuilder(
+                                    "0"
+                                    , drUpdateReportVO.getReportStartTime()
+                                    , duration
+                                    , drUpdateReportVO.getKepcoCstmrNo()
+                                    , Long.valueOf(100)
+                                    , 0.0F
+                                    , Float.valueOf(meterValue.getAccmltMeteringVal())).build()
+                            ).build();
 
-            OadrPayload oadrPayload = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.EI_REPORT_SERVICE, OadrPayload.class);
+                    OadrUpdateReportType oadrUpdateReportType = Oadr20bEiReportBuilders.newOadr20bUpdateReportBuilder(DR_UPDATE_REPORT_ID + UUID.randomUUID(), app.drVenId).addReport(reportUpdate).build();
+                    OadrPayload requestData = Oadr20bFactory.createOadrPayload("", oadrUpdateReportType);
 
+                    OadrPayload oadrPayload = app.oadrHttpClient.post(Oadr20bFactory.createOadrPayload(requestData), Oadr20bUrlPath.OADR_BASE_PATH + Oadr20bUrlPath.EI_REPORT_SERVICE, OadrPayload.class);
 
-            logger.info("---------------------------------------------------");
-            logger.info(" [ updateReport ] ");
-            logger.info("VTN ->");
-            logger.info("ResponseCode : " + oadrPayload.getOadrSignedObject().getOadrRegisteredReport().getEiResponse().getResponseCode());
-            logger.info("ResponseDescription : " + oadrPayload.getOadrSignedObject().getOadrRegisteredReport().getEiResponse().getResponseDescription());
-            logger.info("getReportRequestID : " + oadrPayload.getOadrSignedObject().getOadrRegisteredReport().getOadrReportRequest().get(0).getReportRequestID());
-            logger.info("getReportSpecifierID : " + oadrPayload.getOadrSignedObject().getOadrRegisteredReport().getOadrReportRequest().get(0).getReportSpecifier().getReportSpecifierID());
-            logger.info("getGranularity().getDuration() : " + oadrPayload.getOadrSignedObject().getOadrRegisteredReport().getOadrReportRequest().get(0).getReportSpecifier().getGranularity().getDuration());
-            logger.info("getReportBackDuration().getDuration() : " + oadrPayload.getOadrSignedObject().getOadrRegisteredReport().getOadrReportRequest().get(0).getReportSpecifier().getReportBackDuration().getDuration());
-            logger.info("getDuration : " + oadrPayload.getOadrSignedObject().getOadrRegisteredReport().getOadrReportRequest().get(0).getReportSpecifier().getReportBackDuration().getDuration());
+                    logger.info("---------------------------------------------------");
 
+                    if (oadrPayload.getOadrSignedObject().getOadrUpdatedReport() == null) {
+                        logger.info(" [ " + duration + " - UpdateReport 실패 ] ");
+                        drUpdateReportVO.setResltCd("998");
+                        drUpdateReportVO.setResltMsg("Response is null");
+                    } else {
 
-            logger.info("---------------------------------------------------");
-        } catch (Oadr20bException e) {
-            throw new RuntimeException(e);
-        } catch (Oadr20bHttpLayerException e) {
-            throw new RuntimeException(e);
-        } catch (Oadr20bXMLSignatureException e) {
-            throw new RuntimeException(e);
-        } catch (Oadr20bXMLSignatureValidationException e) {
-            throw new RuntimeException(e);
+                        if (oadrPayload.getOadrSignedObject().getOadrUpdatedReport().getEiResponse().getResponseCode().equals(DR_CODE_SUCCESS)) {
+                            logger.info(" [ " + duration + " - UpdateReport 성공 ] ");
+                        } else if (oadrPayload.getOadrSignedObject().getOadrUpdatedReport().getEiResponse().getResponseCode().equals(DR_CODE_INVALID_ID)) {
+                            logger.info(" [ " + duration + " - UpdateReport 실패 : 유효하지 않은 ID ] ");
+                        }
+
+                        drUpdateReportVO.setResltCd(oadrPayload.getOadrSignedObject().getOadrUpdatedReport().getEiResponse().getResponseCode());
+                        drUpdateReportVO.setResltMsg(oadrPayload.getOadrSignedObject().getOadrUpdatedReport().getEiResponse().getResponseDescription());
+                    }
+
+                    insertUpdateReportHistory(drUpdateReportVO);
+
+                } else {
+                    logger.info(" [ " + duration + " - UpdateReport - 해당 시간에 계량값 없음 ] ");
+                    logger.info(" [ 계량 일시 : " + drUpdateReportVO.getMeteringDate() + drUpdateReportVO.getHhmm() + " ] ");
+                    logger.info(" [ 한전고객번호 : " + app.rIdList.get(i) + " ] ");
+
+                    drUpdateReportVO.setResltCd("300");
+                    drUpdateReportVO.setResltMsg("MeterValue is null");
+
+                    insertUpdateReportHistory(drUpdateReportVO);
+                }
+
+                Thread.sleep(100);
+            }
+        } catch (Oadr20bHttpLayerException oadr20bHttpLayerException) {
+            logger.info(" [ " + duration + " -  UpdateReport 실패 oadr20bHttpLayerException ] ");
+            logger.info(" [ ErrorCode : " + oadr20bHttpLayerException.getErrorCode() + " ] ");
+            logger.info(" [ ErrorMessage : " + oadr20bHttpLayerException.getErrorMessage() + " ] ");
+            drUpdateReportVO.setResltCd(String.valueOf(oadr20bHttpLayerException.getErrorCode()));
+            drUpdateReportVO.setResltMsg(oadr20bHttpLayerException.getErrorMessage());
+
+            insertUpdateReportHistory(drUpdateReportVO);
+        } catch (Exception e) {
+            logger.info(" [ " + duration + " -  UpdateReport 실패 Exception ] ");
+
+            drUpdateReportVO.setResltCd("999");
+            drUpdateReportVO.setResltMsg("Unknown Error");
+
+            insertUpdateReportHistory(drUpdateReportVO);
         }
     }
 
+    //Update Report 완료 후 이력 데이터 insert
+    private void insertUpdateReportHistory(DrUpdateReportVO drUpdateReportVO) {
+
+        int insertUpdateReportResult = 0;
+
+        try {
+            insertUpdateReportResult = drService.insertUpdateReport(drUpdateReportVO);
+        } catch (Exception e) {
+            logger.info(" [ " + drUpdateReportVO.getDuration() + " -  UpdateReport 이력 INSERT Exception ] ");
+        }
+
+        if (insertUpdateReportResult > 0) {
+            logger.info(" [ " + drUpdateReportVO.getDuration() + " - UpdateReport 이력 INSERT 성공 ] ");
+        } else {
+            logger.info(" [ " + drUpdateReportVO.getDuration() + " - UpdateReport 이력 INSERT 실패 ] ");
+        }
+    }
     /**
      * 주기적으로 DR Event 폴링 - 최소 30초
      */
-    @Scheduled(cron="0/60 * * * * *")
+    //@Scheduled(cron="0/60 * * * * *")
     @RequestMapping("/oadrPoll")
     public void oadrPoll() {
         logger.info("---------------------------------------------------");
@@ -420,17 +524,7 @@ public class DrController {
                 } else {
                     logger.info("[ Poll Failure - 레포트 갱신 필요 ]");
 
-                    renewing = true;
-
-                    int registerReportCount = registerReport(app.drBaseVO, app.rIdList);
-
-                    if (registerReportCount == app.rIdList.size()) {
-                        logger.info(" [ DR 레포트 등록 완료 ] ");
-                        renewing = false;
-                    } else {
-                        logger.info(" [ DR 레포트 등록 오류 : 일부 등록 실패 ] ");
-                        renewing = false;
-                    }
+                    renewReport();
                 }
 
                 logger.info("---------------------------------------------------");
@@ -447,6 +541,26 @@ public class DrController {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    private void renewReport() {
+
+        renewing = true;
+
+        try {
+            int registerReportCount = registerReport(app.drBaseVO, app.rIdList);
+
+            if (registerReportCount == app.rIdList.size()) {
+                logger.info(" [ DR 레포트 등록 완료 ] ");
+            } else {
+                logger.info(" [ DR 레포트 등록 오류 : 일부 등록 실패 ] ");
+            }
+        } catch (Exception e) {
+            logger.info(" [ DR 레포트 등록 Exception ] ");
+        } finally {
+            renewing = false;
+        }
+
     }
 
     @RequestMapping("/oadrRequestEvent")
@@ -642,6 +756,83 @@ public class DrController {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private DrUpdateReportVO getReportStartTime() throws Exception {
+
+        DrUpdateReportVO drUpdateReportVO = new DrUpdateReportVO();
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MINUTE, -5);
+
+        Date date = new Date(calendar.getTimeInMillis());
+
+        SimpleDateFormat dbFormat = new SimpleDateFormat(FORMAT_YEAR_MONTH_DAY);
+        drUpdateReportVO.setMeteringDate(dbFormat.format(date));
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(FORMAT_DEFAULT);
+        String dateTime = simpleDateFormat.format(date);
+
+        String tempMinute = "";
+
+        int minute = Integer.parseInt(dateTime.substring(14,16));
+
+        System.out.println("minute : " + minute);
+
+        if (minute >= 0 && minute < 5) {
+            tempMinute = "00";
+
+            drUpdateReportVO.setHhmm(dateTime.substring(11,13) + tempMinute);
+
+        } else if (minute >= 5 && minute < 10) {
+            tempMinute = "05";
+
+            drUpdateReportVO.setHhmm(dateTime.substring(11,13) + tempMinute);
+        } else if (minute >= 10 && minute < 15) {
+            tempMinute = "10";
+
+            drUpdateReportVO.setHhmm(dateTime.substring(11,13) + tempMinute);
+        } else if (minute >= 15 && minute < 20) {
+            tempMinute = "15";
+
+            drUpdateReportVO.setHhmm(dateTime.substring(11,13) + tempMinute);
+        } else if (minute >= 20 && minute < 25) {
+            tempMinute = "20";
+
+            drUpdateReportVO.setHhmm(dateTime.substring(11,13) + tempMinute);
+        } else if (minute >= 25 && minute < 30) {
+            tempMinute = "25";
+
+            drUpdateReportVO.setHhmm(dateTime.substring(11,13) + tempMinute);
+        } else if (minute >= 30 && minute < 35) {
+            tempMinute = "30";
+
+            drUpdateReportVO.setHhmm(dateTime.substring(11,13) + tempMinute);
+        } else if (minute >= 35 && minute < 40) {
+            tempMinute = "35";
+
+            drUpdateReportVO.setHhmm(dateTime.substring(11,13) + tempMinute);
+        } else if (minute >= 40 && minute < 45) {
+            tempMinute = "40";
+
+            drUpdateReportVO.setHhmm(dateTime.substring(11,13) + tempMinute);
+        } else if (minute >= 45 && minute < 50) {
+            tempMinute = "45";
+
+            drUpdateReportVO.setHhmm(dateTime.substring(11,13) + tempMinute);
+        } else if (minute >= 50 && minute < 55) {
+            tempMinute = "50";
+
+            drUpdateReportVO.setHhmm(dateTime.substring(11,13) + tempMinute);
+        } else if (minute >= 55) {
+            tempMinute = "55";
+
+            drUpdateReportVO.setHhmm(dateTime.substring(11,13) + tempMinute);
+        }
+
+        drUpdateReportVO.setReportStartTime(new SimpleDateFormat(FORMAT_DEFAULT).parse(dateTime.substring(0, dateTime.length()-5) + tempMinute + ":00").getTime());
+
+        return drUpdateReportVO;
     }
 
     /**

@@ -52,6 +52,7 @@ public abstract class StreamBaseType {
     protected Dtstart dtstart;
     @XmlElement(namespace = "urn:ietf:params:xml:ns:icalendar-2.0")
     protected DurationPropType duration;
+    @XmlElement(namespace = "urn:ietf:params:xml:ns:icalendar-2.0:stream")
     protected Intervals intervals;
 
     /**

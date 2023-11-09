@@ -3,6 +3,7 @@ package pms.api.dr.service;
 import pms.api.dr.service.vo.DrBaseVO;
 import pms.api.dr.service.vo.DrEventVO;
 import pms.api.dr.service.vo.DrReportVO;
+import pms.api.dr.service.vo.DrUpdateReportVO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,4 +50,13 @@ public interface DrMapper {
 
     //현재 시간에 가장 근접한 DR Event 시작 시간과의 차이
     int selectEventTimeGap() throws Exception;
+
+    //한전고객의 계량값 가져오기 여러개일 경우 합산
+    DrUpdateReportVO selectMeterValue(DrUpdateReportVO drUpdateReportVO) throws Exception;
+
+    //Update 한 계량값 DB 에 넣기
+    int insertUpdateReport(DrUpdateReportVO drUpdateReportVO) throws Exception;
+
+    //KPX에 등록된 ReportRequestId 검색
+    String selectReportRequestId(DrUpdateReportVO drUpdateReportVO) throws Exception;
 }

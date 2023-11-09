@@ -8,6 +8,7 @@ import pms.api.dr.service.DrService;
 import pms.api.dr.service.vo.DrBaseVO;
 import pms.api.dr.service.vo.DrEventVO;
 import pms.api.dr.service.vo.DrReportVO;
+import pms.api.dr.service.vo.DrUpdateReportVO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,5 +82,23 @@ public class DrServiceImpl implements DrService {
     public int selectEventTimeGap() throws Exception {
         DrMapper drMapper = sqlSession.getMapper(DrMapper.class);
         return drMapper.selectEventTimeGap();
+    }
+
+    //한전고객의 계량값 가져오기 여러개일 경우 합산
+    public DrUpdateReportVO selectMeterValue(DrUpdateReportVO drUpdateReportVO) throws Exception {
+        DrMapper drMapper = sqlSession.getMapper(DrMapper.class);
+        return drMapper.selectMeterValue(drUpdateReportVO);
+    }
+
+    //Update 한 계량값 DB 에 넣기
+    public int insertUpdateReport(DrUpdateReportVO drUpdateReportVO) throws Exception {
+        DrMapper drMapper = sqlSession.getMapper(DrMapper.class);
+        return drMapper.insertUpdateReport(drUpdateReportVO);
+    }
+
+    //KPX에 등록된 ReportRequestId 검색
+    public String selectReportRequestId(DrUpdateReportVO drUpdateReportVO) throws Exception {
+        DrMapper drMapper = sqlSession.getMapper(DrMapper.class);
+        return drMapper.selectReportRequestId(drUpdateReportVO);
     }
 }

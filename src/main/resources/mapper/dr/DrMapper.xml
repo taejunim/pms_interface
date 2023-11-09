@@ -175,4 +175,67 @@
 
     </select>
 
+    <select id="selectMeterValue" parameterType="DrUpdateReportVO" resultType="DrUpdateReportVO">
+        <!-- 한전고객의 계량값 가져오기 여러개일 경우 합산 -->
+        SELECT IFNULL(metering_date, #{meteringDate}) AS meteringDate
+             , IFNULL(hhmm, #{hhmm}) AS hhmm
+             , IFNULL(kepco_cstmr_no, #{kepcoCstmrNo}) AS kepcoCstmrNo
+             , IFNULL(SUM(accmlt_metering_val), 0.0) AS accmltMeteringVal
+        <choose>
+            <when test="duration == 'PT5M'">
+                FROM tb_dr_5m
+            </when>
+            <otherwise>
+                FROM tb_dr_15m
+            </otherwise>
+        </choose>
+        WHERE kepco_cstmr_no = #{kepcoCstmrNo}
+        AND metering_date = #{meteringDate}
+        AND hhmm = #{hhmm}
+    </select>
+
+
+    <insert id="insertUpdateReport" parameterType="DrUpdateReportVO" >
+        <!-- Update 한 계량값 DB 에 넣기 -->
+        <choose>
+            <when test="duration == 'PT5M'">
+                INSERT INTO tb_dr_5m_kpx_api (
+            </when>
+            <otherwise>
+                INSERT INTO tb_dr_15m_kpx_api (
+            </otherwise>
+        </choose>
+                    reg_dt
+                    , report_start_dt
+                    , interval_start_dt
+                    , interval_cntnc_pd
+                    , interval_num
+                    , kepco_cstmr_no
+                    , metering_val
+                    , ven_id
+                    , reslt_cd
+                    , reslt_msg
+                )
+                VALUES (
+                        NOW()
+                        , DATE_FORMAT(FROM_UNIXTIME(#{reportStartTime}/1000), '%Y-%m-%d %H:%i:%s')
+                        , DATE_FORMAT(FROM_UNIXTIME(#{reportStartTime}/1000), '%Y-%m-%d %H:%i:%s')
+                        , #{duration}
+                        , #{intervalNum}
+                        , #{kepcoCstmrNo}
+                        , #{accmltMeteringVal}
+                        , #{drVenId}
+                        , #{resltCd}
+                        , #{resltMsg}
+                       )
+    </insert>
+
+    <select id="selectReportRequestId" parameterType="DrUpdateReportVO" resultType="java.lang.String">
+        <!-- KPX에 등록된 ReportRequestId 검색 -->
+        SELECT ifnull(report_reqst_id, '0000000000') AS reportReqstId
+        FROM tb_dr_report_api
+        WHERE kepco_cstmr_no = #{kepcoCstmrNo}
+        and report_unit = #{duration}
+    </select>
+
 </mapper>
