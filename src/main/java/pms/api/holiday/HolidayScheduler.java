@@ -67,7 +67,7 @@ public class HolidayScheduler {
      * 매달 말일에 공휴일 API 호출 하여 응답값 DB에 저장(매일 23시 55분에 현재가 말일인지 체크)
      * 매달 말일 23시 55분 실행
      **/
-    //@Scheduled(cron="0 55 23 * * ?")
+    @Scheduled(cron="0 55 23 * * ?")
     public void getHolidayData() throws URISyntaxException {
 
         logger.debug("공휴일 Scheduler 실행 ====>");

@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
@@ -85,7 +86,7 @@ public class KepcoAmiScheduler {
      * 유효한 고객 정보로 15분 단위 호출 후 저장
      * 매 시간 정각 실행
      **/
-    //@Scheduled(cron = "0 0 0/1 * * *")
+    @Scheduled(cron = "0 0 0/1 * * *")
     public void getKepcoAmiData() throws URISyntaxException, ParseException {
         logger.debug("==== 한전 전력 소비 데이터 Scheduler 실행 ====");
 
@@ -321,7 +322,7 @@ public class KepcoAmiScheduler {
      * saveKepcoAmiData()
      * 한전 계기번호 목록을 메모리에 저장하고 DB 고객정보와 비교, 매일 08시 44분에 실행
      **/
-    //@Scheduled(cron = "0 44 8 * * *")
+    @Scheduled(cron = "0 44 8 * * *")
     public void saveKepcoAmiData() {
 
         logger.debug("==== 한전 계기 번호 Scheduler 실행 ====");
@@ -373,7 +374,7 @@ public class KepcoAmiScheduler {
      * saveKepcoCustomerData()
      * 한전 고객 정보 목록을 메모리에 저장, 매일 08시 50분에 실행
      **/
-    //@Scheduled(cron = "0 50 8 * * *")
+    @Scheduled(cron = "0 50 8 * * *")
     public void saveKepcoCustomerData() {
 
         logger.debug("==== 한전 고객 정보 Scheduler 실행 ====");

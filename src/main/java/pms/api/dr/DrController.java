@@ -322,7 +322,7 @@ public class DrController {
     }
 
     //계량값 Update - 5분 주기로 5분데이터, 15분 주기로 15분 데이터 전송
-    //@Scheduled(cron="10 0/5 * * * *")
+    @Scheduled(cron="10 0/5 * * * *")
     @RequestMapping("/oadrUpdateReport")
     private void oadrUpdateReport() {
         logger.info("---------------------------------------------------");
@@ -480,7 +480,7 @@ public class DrController {
     /**
      * 주기적으로 DR Event 폴링 - 최소 30초
      */
-    //@Scheduled(cron="0/60 * * * * *")
+    @Scheduled(cron="0/60 * * * * *")
     @RequestMapping("/oadrPoll")
     public void oadrPoll() {
         logger.info("---------------------------------------------------");

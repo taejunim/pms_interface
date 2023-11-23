@@ -61,7 +61,7 @@ public class SmpLimitCostScheduler {
      * saveSmpLimitCostData()
      * 전력 거래소 SMP 계통 한계 가격 조회 후 저장
      **/
-    //@Scheduled(cron = "30 0 0/1 * * *")
+    @Scheduled(cron = "30 0 0/1 * * *")
     public void saveSmpLimitCostData() {
 
         for(int i = 0; i < codeList.size(); i ++) {
