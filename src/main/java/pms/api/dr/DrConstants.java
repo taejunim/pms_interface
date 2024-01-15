@@ -38,6 +38,11 @@ public class DrConstants {
     public static final String rsaPrivateKeyPemFilePath = "/usr/local/tomcat/webapps/ROOT/WEB-INF/classes/key/20200500002642.key";
     public static final String rsaClientCertPemFilePath = "/usr/local/tomcat/webapps/ROOT/WEB-INF/classes/key/20200500002642.crt";
 
+    //개발
+//    public static final String rsaTrustedRootCertificate = "/metis/pms-Interface/apache-tomcat-9.0.54/webapps/ROOT/WEB-INF/classes/key/KPX_DR_CA_2016.crt";
+//    public static final String rsaPrivateKeyPemFilePath = "/metis/pms-Interface/apache-tomcat-9.0.54/webapps/ROOT/WEB-INF/classes/key/20200500002642.key";
+//    public static final String rsaClientCertPemFilePath = "/metis/pms-Interface/apache-tomcat-9.0.54/webapps/ROOT/WEB-INF/classes/key/20200500002642.crt";
+
     //로컬
     /*public static final String rsaTrustedRootCertificate = "src/main/resources/key/KPX_DR_CA_2016.crt";
     public static final String rsaPrivateKeyPemFilePath = "src/main/resources/key/20200500002642.key";
